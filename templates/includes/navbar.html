@@ -76,7 +76,23 @@
                     </ul>
                 </li>
 
-                <!-- 4. СИСТЕМА И ОТЧЁТЫ -->
+                <!-- 4. СОТРУДНИКИ И УПРАВЛЕНИЕ-->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="staffMenu" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">
+                        <i class="fas fa-users"></i> Сотрудники
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="staffMenu">
+                        <li><a class="dropdown-item" href="{% url 'cards:user_directory' %}">
+                            <i class="fas fa-user-tie"></i> Директория сотрудников
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:employee_import' %}">
+                            <i class="fas fa-upload"></i> Импорт из CSV
+                        </a></li>
+                    </ul>
+                </li>
+
+                <!-- 5. СИСТЕМА И ОТЧЁТЫ -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="systemMenu" role="button" data-bs-toggle="dropdown"
                        aria-expanded="false">
@@ -96,7 +112,7 @@
                     </ul>
                 </li>
 
-                <!-- 5. ПРОФИЛЬ И ВЫХОД -->
+                <!-- 6. ПРОФИЛЬ И ВЫХОД -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="profileMenu" role="button" data-bs-toggle="dropdown"
                        aria-expanded="false">
