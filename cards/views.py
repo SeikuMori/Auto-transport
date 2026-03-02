@@ -632,3 +632,58 @@ class EmployeeImportView(LoginRequiredMixin, UserPassesTestMixin, View):
             return render(request, self.template_name, {
                 'error': f'Ошибка при обработке файла: {str(e)}'
             })
+
+# ===== ТЕХНИЧЕСКОЕ ОБСЛУЖИВАНИЕ (ТО-2) =====
+
+class MaintenanceScheduleView(LoginRequiredMixin, ListView):
+    """
+    Список расписаний техническое обслуживание ТО-2.
+
+    Показывает:
+    - Транспортного средства, нуждающиеся в ТО-2
+    - Статус выполнения
+    - Дату следующей ТО-2
+    - Фильтрация по статусу
+
+    Требует аутентификации.
+    """
+    from .models import MaintenanceSchedule
+
+    model = MaintenanceSchedule
+    template_name = 'cards/maintenance_schedule.html'
+    context_object_name = 'schedules'
+    paginate_by = 20
+    login_url = 'admin:login'
+
+    def get_queryset(self):
+        """Получить расписание с фильтрацией"""
+        queryset = MaintenanceSchedule.objects.select_related('vehicle').all()
+
+        # Фильтрация по статусу
+        status = self.request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+
+        # Фильтрация по ТС (поиск)
+        q = self.request.GET.get('q')
+        if q:
+            queryset = queryset.filter(
+                Q(vehicle__garage_number__icontains=q) |
+                Q(vehicle__brand_model__name__icontains=q)
+            )
+
+        return queryset.order_by('next_maintenance_date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Добавляем статистику
+        from .models import MaintenanceSchedule as MS
+
+        context['total_count'] = MS.objects.count()
+        context['scheduled_count'] = MS.objects.filter(status='scheduled').count()
+        context['in_progress_count'] = MS.objects.filter(status='in_progress').count()
+        context['overdue_count'] = MS.objects.filter(status='overdue').count()
+        context['completed_count'] = MS.objects.filter(status='completed').count()
+
+        return context

@@ -26,5 +26,7 @@ urlpatterns = [
     path('employees/', views.UserDirectoryView.as_view(), name='user_directory'),
     # Импорт сотрудников из CSV
     path('employees/import/', views.EmployeeImportView.as_view(), name='employee_import'),
+    # Расписание ТО-2
+    path('maintenance/', views.MaintenanceScheduleView.as_view(), name='maintenance_schedule'),
 ]
 

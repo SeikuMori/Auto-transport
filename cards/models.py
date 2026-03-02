@@ -1062,6 +1062,94 @@ class Vehicle(models.Model):
         ordering = ['garage_number']
 
 
+# ===== ТЕХНИЧЕСКОЕ ОБСЛУЖИВАНИЕ (ТО-2) =====
+
+class MaintenanceSchedule(models.Model):
+    """
+    Модель для управления расписанием техническое обслуживание ТО-2.
+
+    Отслеживает:
+    - Когда была последняя ТО-2
+    - Когда следующая ТО-2 должна быть выполнена
+    - Статус выполнения
+    - Заметки и результаты
+    """
+
+    STATUS_CHOICES = (
+        ('scheduled', 'Запланировано'),
+        ('in_progress', 'В процессе'),
+        ('completed', 'Завершено'),
+        ('overdue', 'Просрочено'),
+        ('cancelled', 'Отменено'),
+    )
+
+    vehicle = models.ForeignKey(
+        Vehicle,
+        on_delete=models.CASCADE,
+        related_name='maintenance_schedules',
+        verbose_name="Транспортное средство"
+    )
+
+    last_maintenance_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Дата последней ТО-2"
+    )
+
+    last_maintenance_mileage = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Пробег при последней ТО-2 (км)"
+    )
+
+    next_maintenance_date = models.DateField(
+        verbose_name="Дата следующей ТО-2",
+        db_index=True
+    )
+
+    next_maintenance_mileage = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Пробег для следующей ТО-2 (км)"
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='scheduled',
+        verbose_name="Статус",
+        db_index=True
+    )
+
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Заметки",
+        help_text="Результаты ТО-2 или замечания"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания"
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Дата обновления"
+    )
+
+    def __str__(self):
+        return f"ТО-2 {self.vehicle.garage_number} - {self.get_status_display()}"
+
+    class Meta:
+        verbose_name = "Расписание ТО-2"
+        verbose_name_plural = "Расписания ТО-2"
+        ordering = ['next_maintenance_date']
+        indexes = [
+            models.Index(fields=['vehicle', '-next_maintenance_date']),
+            models.Index(fields=['status', 'next_maintenance_date']),
+        ]
+
+
 # ===== АУДИТ-ЛОГИРОВАНИЕ =====
 
 class AuditLog(models.Model):
