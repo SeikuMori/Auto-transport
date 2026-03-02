@@ -104,10 +104,12 @@ class VehicleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         'has_lifting_equipment',
         # Техническое обслуживание
         'dprg_inspection_date', 'dprg_next_inspection_date', 'dprg_inspection_scan',
+        # Бухгалтерские данные
+        'okof_code', 'date_in_service', 'depreciation_rate',
+        'accumulated_depreciation', 'residual_value',
         # Старые поля сроков (для совместимости)
         'to2_period_days', 'to3_period_days', 'tech_inspection_expiry', 'insurance_expiry'
     ]
-    success_url = reverse_lazy('cards:vehicle_list')
     login_url = 'admin:login'
 
     def test_func(self):
@@ -191,6 +193,9 @@ class VehicleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         'has_lifting_equipment',
         # Техническое обслуживание
         'dprg_inspection_date', 'dprg_next_inspection_date', 'dprg_inspection_scan',
+        # Бухгалтерские данные
+        'okof_code', 'date_in_service', 'depreciation_rate',
+        'accumulated_depreciation', 'residual_value',
         # Старые поля сроков (для совместимости)
         'to2_period_days', 'to3_period_days', 'tech_inspection_expiry', 'insurance_expiry'
     ]

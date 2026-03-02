@@ -866,6 +866,46 @@ class Vehicle(models.Model):
         verbose_name="Дата истечения страховки"
     )
 
+    # === БЛОК 5: БУХГАЛТЕРСКИЕ ДАННЫЕ ===
+    okof_code = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name="Код ОКОФ",
+        help_text="Общероссийский классификатор основных фондов (например: 1700000000194)"
+    )
+
+    date_in_service = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Дата ввода в эксплуатацию",
+        help_text="Для расчета износа и амортизации"
+    )
+
+    depreciation_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Норма амортизации (%)",
+        help_text="Годовой процент амортизации"
+    )
+
+    accumulated_depreciation = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Накопленная амортизация (Р)"
+    )
+
+    residual_value = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Остаточная стоимость (Р)"
+    )
+
     # === АРХИВИРОВАНИЕ ===
     is_archived = models.BooleanField(
         default=False,
