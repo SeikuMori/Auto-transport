@@ -22,5 +22,9 @@ urlpatterns = [
     path('<int:pk>/archive/', views.VehicleArchiveView.as_view(), name='vehicle_archive'),
     # Восстановить ТС из архива
     path('<int:pk>/unarchive/', views.VehicleUnarchiveView.as_view(), name='vehicle_unarchive'),
+    # Директория сотрудников
+    path('employees/', views.UserDirectoryView.as_view(), name='user_directory'),
+    # Импорт сотрудников из CSV
+    path('employees/import/', views.EmployeeImportView.as_view(), name='employee_import'),
 ]
 

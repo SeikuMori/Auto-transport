@@ -7,7 +7,7 @@ from django.utils import timezone
 from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from .models import Vehicle, AuditLog
+from .models import Vehicle, AuditLog, UserProfile
 
 
 class VehicleListView(LoginRequiredMixin, ListView):
@@ -465,3 +465,170 @@ class VehicleUnarchiveView(LoginRequiredMixin, UserPassesTestMixin, View):
             ip = request.META.get('REMOTE_ADDR')
         return ip
 
+
+# ===== ДИРЕКТОРИЯ СОТРУДНИКОВ =====
+
+class UserDirectoryView(LoginRequiredMixin, ListView):
+    """
+    Директория всех сотрудников с поиском и фильтрацией.
+
+    Отображает:
+    - ФИО
+    - Табельный номер
+    - Должность
+    - Группа доступа
+    - Дата создания
+
+    Требует аутентификации.
+    """
+    model = UserProfile
+    template_name = 'cards/user_directory.html'
+    context_object_name = 'users'
+    paginate_by = 20
+    login_url = 'admin:login'
+
+    def get_queryset(self):
+        """Получить список сотрудников с фильтрацией"""
+        queryset = UserProfile.objects.all()
+
+        # Поиск по ФИО, табельному номеру или должности
+        q = self.request.GET.get('q')
+        if q:
+            queryset = queryset.filter(
+                Q(fio__icontains=q) |
+                Q(tab_number__icontains=q) |
+                Q(position__icontains=q) |
+                Q(user__username__icontains=q)
+            )
+
+        return queryset.select_related('user').order_by('fio')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Добавляем информацию о группах для каждого сотрудника
+        for user_profile in context['users']:
+            user_profile.groups = user_profile.user.groups.all()
+
+        return context
+
+
+class EmployeeImportView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """
+    Форма для импорта сотрудников из CSV файла.
+
+    Только для администраторов.
+    Поддерживаемый формат CSV:
+    ФИО,Табельный номер,Должность,Логин,Группа
+
+    Примеры:
+    Иван Иванов,001,Администратор,iivanov,Администратор
+    Мария Сидорова,002,Специалист,msidorova,Специалист
+    """
+    login_url = 'admin:login'
+    template_name = 'cards/employee_import.html'
+
+    def test_func(self):
+        """Только администраторы"""
+        groups = [g.name for g in self.request.user.groups.all()]
+        return 'Администратор' in groups
+
+    def get(self, request, *args, **kwargs):
+        """Отобразить форму импорта"""
+        from django.shortcuts import render
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        """Обработать загрузку CSV файла"""
+        import csv
+        from django.contrib.auth.models import User, Group
+        from django.shortcuts import render
+
+        if 'csv_file' not in request.FILES:
+            return render(request, self.template_name, {'error': 'Файл не выбран'})
+
+        csv_file = request.FILES['csv_file']
+
+        if not csv_file.name.endswith('.csv'):
+            return render(request, self.template_name, {'error': 'Файл должен быть в формате CSV'})
+
+        try:
+            # Декодируем файл
+            stream = csv_file.read().decode('UTF8').splitlines()
+            reader = csv.DictReader(stream)
+
+            # Проверяем заголовки
+            required_fields = {'ФИО', 'Табельный номер', 'Логин', 'Группа'}
+            if not reader.fieldnames or not required_fields.issubset(set(reader.fieldnames)):
+                return render(
+                    request,
+                    self.template_name,
+                    {'error': f'CSV должен содержать столбцы: {", ".join(required_fields)}'}
+                )
+
+            created_count = 0
+            updated_count = 0
+            errors = []
+
+            for row_num, row in enumerate(reader, start=2):
+                try:
+                    fio = row.get('ФИО', '').strip()
+                    tab_number = row.get('Табельный номер', '').strip()
+                    position = row.get('Должность', 'Пользователь').strip()
+                    username = row.get('Логин', '').strip()
+                    group_name = row.get('Группа', 'Пользователь').strip()
+
+                    if not fio or not tab_number or not username:
+                        errors.append(f'Строка {row_num}: отсутствуют обязательные поля')
+                        continue
+
+                    # Получаем или создаем группу
+                    group, _ = Group.objects.get_or_create(name=group_name)
+
+                    # Получаем или создаем пользователя
+                    user, user_created = User.objects.get_or_create(username=username)
+                    user.first_name = fio.split()[0] if fio else ''
+                    user.last_name = ' '.join(fio.split()[1:]) if len(fio.split()) > 1 else ''
+                    user.save()
+
+                    # Добавляем в группу если еще не добавлен
+                    if not user.groups.filter(pk=group.pk).exists():
+                        user.groups.add(group)
+
+                    # Получаем или создаем профиль
+                    profile, profile_created = UserProfile.objects.get_or_create(
+                        user=user,
+                        defaults={
+                            'fio': fio,
+                            'tab_number': tab_number,
+                            'position': position,
+                        }
+                    )
+
+                    # Обновляем существующий профиль
+                    if not profile_created:
+                        profile.fio = fio
+                        profile.tab_number = tab_number
+                        profile.position = position
+                        profile.save()
+                        updated_count += 1
+                    else:
+                        created_count += 1
+
+                except Exception as e:
+                    errors.append(f'Строка {row_num}: {str(e)}')
+
+            message = f'Успешно: создано {created_count} сотр., обновлено {updated_count} сотр.'
+            if errors:
+                message += f' Ошибок: {len(errors)}'
+                return render(request, self.template_name, {
+                    'success': message,
+                    'errors': errors
+                })
+
+            return render(request, self.template_name, {'success': message})
+
+        except Exception as e:
+            return render(request, self.template_name, {
+                'error': f'Ошибка при обработке файла: {str(e)}'
+            })

@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block title %}Импорт сотрудников{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h2 class="mb-4">
+                <i class="fas fa-user-plus me-2"></i>Импорт сотрудников из CSV
+            </h2>
+
+            <!-- Сообщения -->
+            {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endif %}
+
+            {% if success %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>{{ success }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endif %}
+
+            {% if errors %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Обнаружены ошибки:
+                    </h5>
+                    <ul class="mb-0 mt-3">
+                        {% for error_msg in errors %}
+                            <li class="small mb-1">{{ error_msg }}</li>
+                        {% endfor %}
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endif %}
+
+            <!-- Форма загрузки -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cloud-upload-alt me-2"></i>Загрузить CSV файл</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="csv_file" class="form-label">
+                                <strong>Выберите CSV файл:</strong>
+                            </label>
+                            <input
+                                type="file"
+                                class="form-control form-control-lg"
+                                id="csv_file"
+                                name="csv_file"
+                                accept=".csv"
+                                required
+                            >
+                            <small class="text-muted d-block mt-2">
+                                Формат: CSV (разделитель запятая, кодировка UTF-8)
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-upload me-2"></i>Загрузить и импортировать
+                        </button>
+                        <a href="{% url 'cards:user_directory' %}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times me-2"></i>Отмена
+                        </a>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Инструкция -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Формат CSV файла
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-3">Требуемые столбцы:</h6>
+                    <table class="table table-sm table-bordered mb-4">
+                        <thead>
+                            <tr class="table-light">
+                                <th>Столбец</th>
+                                <th>Обязательный</th>
+                                <th>Описание</th>
+                                <th>Пример</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>ФИО</code></td>
+                                <td><span class="badge bg-danger">Да</span></td>
+                                <td>Полное имя сотрудника</td>
+                                <td>Иван Иванович Иванов</td>
+                            </tr>
+                            <tr>
+                                <td><code>Табельный номер</code></td>
+                                <td><span class="badge bg-danger">Да</span></td>
+                                <td>Уникальный табельный номер</td>
+                                <td>001 или 2024-001</td>
+                            </tr>
+                            <tr>
+                                <td><code>Логин</code></td>
+                                <td><span class="badge bg-danger">Да</span></td>
+                                <td>Логин для входа в систему</td>
+                                <td>iivanov или ivan.ivanov</td>
+                            </tr>
+                            <tr>
+                                <td><code>Должность</code></td>
+                                <td><span class="badge bg-warning">Опционально</span></td>
+                                <td>Должность сотрудника</td>
+                                <td>Водитель, Механик, Диспетчер</td>
+                            </tr>
+                            <tr>
+                                <td><code>Группа</code></td>
+                                <td><span class="badge bg-danger">Да</span></td>
+                                <td>Группа доступа (роль)</td>
+                                <td>Администратор, Специалист, Пользователь</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h6 class="mb-3">Пример CSV файла:</h6>
+                    <div class="bg-light p-3 rounded mb-4" style="font-family: monospace; font-size: 0.85rem;">
+                        ФИО,Табельный номер,Логин,Должность,Группа<br>
+                        Иван Иванов,001,iivanov,Администратор,Администратор<br>
+                        Мария Петрова,002,mpetrova,Специалист,Специалист<br>
+                        Петр Сидоров,003,psidorov,Водитель,Пользователь<br>
+                    </div>
+
+                    <h6 class="mb-3">Как создать CSV файл:</h6>
+                    <ul>
+                        <li>Используйте любой текстовый редактор (Notepad++, VS Code) или Excel</li>
+                        <li>Если используете Excel, сохраните как "Текст (CSV)"</li>
+                        <li>Убедитесь в кодировке UTF-8</li>
+                        <li>Используйте запятую как разделитель</li>
+                    </ul>
+
+                    <div class="alert alert-info mt-4 mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Совет:</strong> Если файл не загружается, убедитесь что:
+                        <ul class="mb-0 mt-2">
+                            <li>Файл сохранён как CSV (не XLSX)</li>
+                            <li>Кодировка файла: UTF-8</li>
+                            <li>Первая строка содержит точные названия столбцов (без лишних пробелов)</li>
+                            <li>Все обязательные поля заполнены</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'cards:user_directory' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Вернуться к директории
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('csv_file');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                console.log('Выбран файл:', this.files[0].name);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
