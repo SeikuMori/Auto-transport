@@ -10,9 +10,9 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-12">
             <h2 class="mb-4">
                 {% if form.instance.pk %}
                     Редактировать: [{{ form.instance.garage_number }}] {{ form.instance.brand_model }}
@@ -21,7 +21,7 @@
                 {% endif %}
             </h2>
 
-            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <form method="post" enctype="multipart/form-data" class="needs-validation vehicle-form" novalidate>
                 {% csrf_token %}
 
                 <!-- Блок 1: Основные реквизиты -->
@@ -34,9 +34,11 @@
                             <div class="col-md-6">
                                 {% bootstrap_field form.garage_number %}
                                 {% bootstrap_field form.brand_model %}
+                                {% bootstrap_field form.inventory_number %}
                             </div>
                             <div class="col-md-6">
                                 {% bootstrap_field form.vin %}
+                                {% bootstrap_field form.year_of_manufacture %}
                                 <!-- Поле фото с кастомным UI -->
                                 <div class="mb-3">
                                     <label class="form-label">Фотография ТС</label>
@@ -53,40 +55,65 @@
                     </div>
                 </div>
 
-                <!-- Блок 2: Характеристики -->
+                <!-- Блок 2: Классификация по ведомствам -->
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="fas fa-sliders-h"></i> Характеристики</h5>
+                        <h5 class="mb-0"><i class="fas fa-sitemap"></i> Классификация по ведомствам</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                {% bootstrap_field form.vehicle_type_for_military %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.vehicle_type_for_tax %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.initial_cost %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                {% bootstrap_field form.motorpool %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.direction %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.ts_status %}
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.dismission_date %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 3: Характеристики кузова -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-sliders-h"></i> Характеристики кузова и топлива</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 {% bootstrap_field form.color %}
                                 {% bootstrap_field form.vehicle_type %}
+                                {% bootstrap_field form.body_type %}
                                 {% bootstrap_field form.category %}
                             </div>
                             <div class="col-md-6">
                                 {% bootstrap_field form.fuel_type %}
-                                {% bootstrap_field form.body_type %}
-                            </div>
-                        </div>
-                        <hr>
-                        <h6 class="mb-3">Технические характеристики</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                {% bootstrap_field form.mass_kg %}
-                                {% bootstrap_field form.mileage_km %}
-                            </div>
-                            <div class="col-md-6">
-                                {% bootstrap_field form.engine_volume %}
-                                {% bootstrap_field form.engine_power_hp %}
-                                {% bootstrap_field form.axles_count %}
+                                {% bootstrap_field form.fuel_grade %}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Блок 3: Паспорт ТС -->
+                <!-- Блок 4: Паспорт ТС -->
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0"><i class="fas fa-passport"></i> Паспорт ТС (ПТС/ЭПТС)</h5>
@@ -129,7 +156,96 @@
                     </div>
                 </div>
 
-                <!-- Блок 4: Регистрационные данные ГИБДД -->
+                <!-- Блок 5: Технические характеристики -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-cog"></i> Технические характеристики двигателя</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.engine_volume %}
+                                {% bootstrap_field form.engine_power_hp %}
+                                {% bootstrap_field form.engine_power_kw %}
+                                {% bootstrap_field form.engine_model_number %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.chassis_number %}
+                                {% bootstrap_field form.body_number %}
+                                {% bootstrap_field form.axles_count %}
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="mb-3">Масса и грузоподъемность</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                {% bootstrap_field form.mass_kg %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.empty_mass %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.cargo_capacity %}
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="mb-3">Габариты и емкости</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.bus_length %}
+                                {% bootstrap_field form.bucket_capacity %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.fuel_tank_capacity %}
+                                {% bootstrap_field form.passenger_capacity %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 6: Расход топлива -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-droplet"></i> Расход топлива (ГСМ)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                {% bootstrap_field form.fuel_consumption_type %}
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="mb-3">Сезонные варианты расходов</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Лето (город)</h6>
+                                {% bootstrap_field form.fuel_consumption_summer_city %}
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Лето (трасса)</h6>
+                                {% bootstrap_field form.fuel_consumption_summer_highway %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Зима (город)</h6>
+                                {% bootstrap_field form.fuel_consumption_winter_city %}
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Зима (трасса)</h6>
+                                {% bootstrap_field form.fuel_consumption_winter_highway %}
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.fuel_consumption_per_hour %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 7: Регистрационные данные ГИБДД -->
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header bg-warning text-dark">
                         <h5 class="mb-0"><i class="fas fa-id-card"></i> Регистрационные данные ГИБДД</h5>
@@ -184,8 +300,15 @@
                         <!-- ОСАГО -->
                         <h6 class="mb-3">Полис ОСАГО (обязательное страхование)</h6>
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 {% bootstrap_field form.osago_number %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.osago_cost %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
                                 <div class="row">
                                     <div class="col-md-6">
                                         {% bootstrap_field form.osago_date_issued %}
@@ -241,7 +364,7 @@
                     </div>
                 </div>
 
-                <!-- Блок 5: ГБО -->
+                <!-- Блок 8: ГБО (газобаллонное оборудование) -->
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header bg-danger text-white">
                         <h5 class="mb-0"><i class="fas fa-gas-pump"></i> ГБО (газобаллонное оборудование)</h5>
@@ -251,28 +374,136 @@
                             <div class="col-md-6">
                                 {% bootstrap_field form.gbo_present %}
                                 {% bootstrap_field form.gbo_type %}
+                                {% bootstrap_field form.gbo_volume %}
                             </div>
                             <div class="col-md-6">
-                                {% bootstrap_field form.gbo_volume %}
                                 {% bootstrap_field form.gbo_installation_date %}
+                                {% bootstrap_field form.gbo_cylinders_count %}
+                                {% bootstrap_field form.gbo_total_capacity %}
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="mb-3">Освидетельствование ГБО</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                {% bootstrap_field form.gbo_inspection_date %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.gbo_next_inspection_date %}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Скан свидетельства ГБО</label>
+                                    <div class="d-flex align-items-center">
+                                        <label for="id_gbo_inspection_scan" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-file"></i> Выберите
+                                        </label>
+                                        <span id="gbo_inspection_scan-file-name" class="text-muted">Не выбран</span>
+                                    </div>
+                                    <input type="file" name="gbo_inspection_scan" id="id_gbo_inspection_scan" style="display:none">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Блок 6: Документы по срокам -->
+                <!-- Блок 9: Оборудование и проверки -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-tools"></i> Оборудование и проверки</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="mb-3">Наличие оборудования</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                {% bootstrap_field form.has_ssmt %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.has_tachograph %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.has_lifting_equipment %}
+                            </div>
+                        </div>
+
+                        <!-- Условное отображение: Тахограф -->
+                        <div id="tachograph-section" class="mt-4 d-none">
+                            <hr>
+                            <h6 class="mb-3">Калибровка тахографа</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% bootstrap_field form.tachograph_calibration_date %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% bootstrap_field form.tachograph_next_calibration_date %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Техническое обслуживание ДПОГ -->
+                        <div id="dprg-section" class="mt-4 d-none">
+                            <hr>
+                            <h6 class="mb-3">Техническое обслуживание в ГИБДД (ДПОГ)</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    {% bootstrap_field form.dprg_inspection_date %}
+                                </div>
+                                <div class="col-md-4">
+                                    {% bootstrap_field form.dprg_next_inspection_date %}
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Скан ДПОГ</label>
+                                        <div class="d-flex align-items-center">
+                                            <label for="id_dprg_inspection_scan" class="btn btn-outline-secondary me-2">
+                                                <i class="fas fa-file"></i> Выберите
+                                            </label>
+                                            <span id="dprg_inspection_scan-file-name" class="text-muted">Не выбран</span>
+                                        </div>
+                                        <input type="file" name="dprg_inspection_scan" id="id_dprg_inspection_scan" style="display:none">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 10: Пробег и техническое обслуживание -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-tachometer-alt"></i> Пробег и ТО</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.mileage_km %}
+                                {% bootstrap_field form.mileage_type %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.motor_hours %}
+                                {% bootstrap_field form.to2_periodicity %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 11: Документы по срокам -->
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header bg-secondary text-white">
                         <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Документы по срокам</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 {% bootstrap_field form.to2_period_days %}
+                            </div>
+                            <div class="col-md-3">
                                 {% bootstrap_field form.to3_period_days %}
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 {% bootstrap_field form.tech_inspection_expiry %}
+                            </div>
+                            <div class="col-md-3">
                                 {% bootstrap_field form.insurance_expiry %}
                             </div>
                         </div>
@@ -318,7 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (this.files && this.files.length > 0) {
                     display.textContent = this.files[0].name;
                 } else {
-                    display.textContent = 'Файл не выбран';
+                    display.textContent = display.getAttribute('data-empty') || 'Файл не выбран';
                 }
             });
         }
@@ -331,6 +562,43 @@ document.addEventListener('DOMContentLoaded', function() {
     setupFileInput('id_reg_certificate_scan', 'reg_certificate_scan-file-name');
     setupFileInput('id_osago_scan', 'osago_scan-file-name');
     setupFileInput('id_diagnostic_card_scan', 'diagnostic_card_scan-file-name');
+    setupFileInput('id_gbo_inspection_scan', 'gbo_inspection_scan-file-name');
+    setupFileInput('id_dprg_inspection_scan', 'dprg_inspection_scan-file-name');
+
+    // Условное отображение полей в зависимости от чекбоксов
+    function updateConditionalFields() {
+        const hasTachographCheckbox = document.getElementById('id_has_tachograph');
+        const tachographSection = document.getElementById('tachograph-section');
+
+        if (hasTachographCheckbox && tachographSection) {
+            if (hasTachographCheckbox.checked) {
+                tachographSection.classList.remove('d-none');
+            } else {
+                tachographSection.classList.add('d-none');
+            }
+        }
+    }
+
+    // Установка обработчиков событий для чекбоксов
+    const hasTachographCheckbox = document.getElementById('id_has_tachograph');
+    if (hasTachographCheckbox) {
+        hasTachographCheckbox.addEventListener('change', updateConditionalFields);
+    }
+
+    // Инициализация состояния условных полей при загрузке формы
+    updateConditionalFields();
+
+    // Bootstrap валидация формы
+    const form = document.querySelector('.vehicle-form');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    }
 });
 </script>
 {% endblock %}
