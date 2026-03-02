@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block title %}{{ vehicle.garage_number }} - {{ vehicle.brand_model }}{% endblock %}
+
+{% block content %}
+{% with expiry_data=vehicle.get_expiring_documents status=vehicle.get_expiry_status %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h2 class="mb-4">
+                [{{ vehicle.garage_number }}] {{ vehicle.brand_model }}
+            </h2>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if user.is_authenticated %}
+                {% if can_edit %}
+                    <a href="{% url 'cards:vehicle_edit' vehicle.pk %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                {% endif %}
+                {% if can_delete %}
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Удалить
+                    </button>
+                    {% if not vehicle.is_archived %}
+                    <form method="post" action="{% url 'cards:vehicle_archive' vehicle.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary" title="Архивировать ТС" onclick="return confirm('Архивировать это транспортное средство?');">
+                            <i class="fas fa-archive"></i> Архив
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="{% url 'cards:vehicle_unarchive' vehicle.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-info" title="Восстановить ТС из архива" onclick="return confirm('Восстановить это транспортное средство?');">
+                            <i class="fas fa-undo"></i> Восстановить
+                        </button>
+                    </form>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'cards:vehicle_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> К списку
+            </a>
+        </div>
+    </div>
+
+    {% if vehicle.is_archived %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-archive"></i> <strong>ТС архивировано</strong>
+        {% if vehicle.archived_at %}
+            <br><small>Архивировано: {{ vehicle.archived_at|date:"d.m.Y H:i" }}</small>
+        {% endif %}
+        {% if vehicle.archived_by %}
+            <small><br>Пользователем: {{ vehicle.archived_by.profile.fio|default:vehicle.archived_by.username }}</small>
+        {% endif %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <!-- БЛОК ПРЕДУПРЕЖДЕНИЙ О СРОКАХ ДОКУМЕНТОВ -->
+    {% if expiry_data.expired or expiry_data.expiring %}
+    <div class="alert alert-{% if expiry_data.expired %}danger{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
+        <h4 class="alert-heading">
+            {% if expiry_data.expired %}
+                <i class="fas fa-exclamation-circle"></i> СРОЧНО: ДОКУМЕНТЫ ИСТЕКЛИ
+            {% else %}
+                <i class="fas fa-clock"></i> ВНИМАНИЕ: ДОКУМЕНТЫ СКОРО ИСТЕКАЮТ
+            {% endif %}
+        </h4>
+
+        {% if expiry_data.expired %}
+            <div class="mb-3">
+                <strong>Истекшие документы:</strong>
+                <ul class="mb-0">
+                {% for doc in expiry_data.expired %}
+                    <li><strong>{{ doc.name }}</strong> - истекло {{ doc.date|date:"d.m.Y" }} ({{ doc.days_left }} дн. назад)</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if expiry_data.expiring %}
+            <div>
+                <strong>Истекают в течение 30 дней:</strong>
+                <ul class="mb-0">
+                {% for doc in expiry_data.expiring %}
+                    <li><strong>{{ doc.name }}</strong> - {{ doc.date|date:"d.m.Y" }} ({{ doc.days_left }} дней)</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if expiry_data.warnings and not expiry_data.expired and not expiry_data.expiring %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-info-circle"></i> Информация</h4>
+        <strong>Заполните данные документов:</strong>
+        <ul class="mb-0">
+        {% for warning in expiry_data.warnings %}
+            <li>{{ warning.name }}</li>
+        {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if expiry_data.ok and not expiry_data.expired and not expiry_data.expiring %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> <strong>Все важные документы в норме!</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <!-- Основные реквизиты -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-car"></i> Основные реквизиты</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Гаражный номер:</strong> {{ vehicle.garage_number }}</p>
+                    <p><strong>Марка и модель:</strong> {{ vehicle.brand_model }}</p>
+                    <p><strong>VIN номер:</strong> {{ vehicle.vin }}</p>
+                </div>
+                <div class="col-md-6">
+                    {% if vehicle.photo %}
+                        <img src="{{ vehicle.photo.url }}" class="img-fluid rounded" alt="{{ vehicle }}" style="max-height: 300px; width: 100%; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light text-center py-5 border rounded">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                            <p class="mt-3 text-muted">Фотография отсутствует</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Характеристики -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-sliders-h"></i> Характеристики</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Цвет кузова:</strong> {{ vehicle.color|default:"—" }}</p>
+                    <p><strong>Тип кузова:</strong> {{ vehicle.vehicle_type|default:"—" }}</p>
+                    <p><strong>Категория ТС:</strong> {{ vehicle.category|default:"—" }}</p>
+                    <p><strong>Тип топлива:</strong> {{ vehicle.fuel_type|default:"—" }}</p>
+                    <p><strong>Тип кузова (детальный):</strong> {{ vehicle.body_type|default:"—" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Масса (кг):</strong> {{ vehicle.mass_kg|default:"—" }}</p>
+                    <p><strong>Пробег (км):</strong> {{ vehicle.mileage_km|default:"—" }}</p>
+                    <p><strong>Объём двигателя (л):</strong> {{ vehicle.engine_volume|default:"—" }}</p>
+                    <p><strong>Мощность двигателя (л.с.):</strong> {{ vehicle.engine_power_hp|default:"—" }}</p>
+                    <p><strong>Количество осей:</strong> {{ vehicle.axles_count|default:"—" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Паспорт ТС -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="fas fa-passport"></i> Паспорт ТС (ПТС/ЭПТС)</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Тип паспорта:</strong>
+                        {% if vehicle.pts_type == 'pts' %}
+                            <span class="badge bg-info">ПТС (бумажный паспорт)</span>
+                        {% else %}
+                            <span class="badge bg-success">ЭПТС (электронный паспорт)</span>
+                        {% endif %}
+                    </p>
+
+                    {% if vehicle.pts_type == 'pts' or vehicle.pts_series %}
+                    <h6 class="mt-3">Реквизиты ПТС:</h6>
+                    <p><strong>Серия:</strong> {{ vehicle.pts_series|default:"—" }}</p>
+                    <p><strong>Номер:</strong> {{ vehicle.pts_number|default:"—" }}</p>
+                    <p><strong>Дата выдачи:</strong> {{ vehicle.pts_date|date:"d.m.Y"|default:"—" }}</p>
+                    {% if vehicle.pts_scan %}
+                        <p><strong>Скан ПТС:</strong> <a href="{{ vehicle.pts_scan.url }}" target="_blank" download>Скачать</a></p>
+                    {% endif %}
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    {% if vehicle.pts_type == 'epts' or vehicle.epts_number %}
+                    <h6>Реквизиты ЭПТС:</h6>
+                    <p><strong>Номер ЭПТС:</strong> {{ vehicle.epts_number|default:"—" }}</p>
+                    <p><strong>Дата выдачи:</strong> {{ vehicle.epts_date|date:"d.m.Y"|default:"—" }}</p>
+                    {% if vehicle.epts_scan %}
+                        <p><strong>Скан ЭПТС:</strong> <a href="{{ vehicle.epts_scan.url }}" target="_blank" download>Скачать</a></p>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted">Данные ЭПТС не указаны</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Регистрационные данные ГИБДД -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="fas fa-id-card"></i> Регистрационные данные ГИБДД</h5>
+        </div>
+        <div class="card-body">
+            <h6 class="mb-3">Государственный номер (ГРЗ)</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>Серия:</strong> {{ vehicle.grz_series|default:"—" }}</p>
+                    <p><strong>Номер:</strong> {{ vehicle.grz_number|default:"—" }}</p>
+                    <p><strong>Дата выдачи:</strong> {{ vehicle.grz_date|date:"d.m.Y"|default:"—" }}</p>
+                </div>
+                <div class="col-md-8"></div>
+            </div>
+
+            <hr>
+
+            <h6 class="mb-3">Свидетельство о регистрации</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Серия:</strong> {{ vehicle.reg_certificate_series|default:"—" }}</p>
+                    <p><strong>Номер:</strong> {{ vehicle.reg_certificate_number|default:"—" }}</p>
+                    <p><strong>Дата выдачи:</strong> {{ vehicle.reg_certificate_date|date:"d.m.Y"|default:"—" }}</p>
+                </div>
+                <div class="col-md-6">
+                    {% if vehicle.reg_certificate_scan %}
+                        <strong>Скан свидетельства:</strong> <a href="{{ vehicle.reg_certificate_scan.url }}" target="_blank" download>Скачать</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr>
+
+            <h6 class="mb-3">Полис ОСАГО</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Номер полиса:</strong> {{ vehicle.osago_number|default:"—" }}</p>
+                    <p><strong>Дата выдачи:</strong> {{ vehicle.osago_date_issued|date:"d.m.Y"|default:"—" }}</p>
+                    <p>
+                        <strong>Дата истечения:</strong>
+                        {% if vehicle.osago_date_expiry %}
+                            <span class="badge bg-{% if vehicle.osago_date_expiry|date:"U" < "now"|date:"U" %}danger{% elif vehicle.osago_date_expiry|date:"U" < "now"|date:"U"|add:2592000 %}warning{% else %}success{% endif %}">
+                                {{ vehicle.osago_date_expiry|date:"d.m.Y" }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">не указана</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    {% if vehicle.osago_scan %}
+                        <strong>Скан ОСАГО:</strong> <a href="{{ vehicle.osago_scan.url }}" target="_blank" download>Скачать</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr>
+
+            <h6 class="mb-3">Диагностическая карта</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Номер карты:</strong> {{ vehicle.diagnostic_card_number|default:"—" }}</p>
+                    <p><strong>Дата:</strong> {{ vehicle.diagnostic_card_date|date:"d.m.Y"|default:"—" }}</p>
+                    <p>
+                        <strong>Дата истечения:</strong>
+                        {% if vehicle.diagnostic_card_expiry %}
+                            <span class="badge bg-{% if vehicle.diagnostic_card_expiry|date:"U" < "now"|date:"U" %}danger{% elif vehicle.diagnostic_card_expiry|date:"U" < "now"|date:"U"|add:2592000 %}warning{% else %}success{% endif %}">
+                                {{ vehicle.diagnostic_card_expiry|date:"d.m.Y" }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">не указана</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    {% if vehicle.diagnostic_card_scan %}
+                        <strong>Скан карты:</strong> <a href="{{ vehicle.diagnostic_card_scan.url }}" target="_blank" download>Скачать</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ГБО -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-gas-pump"></i> ГБО (газобаллонное оборудование)</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Наличие ГБО:</strong>
+                        {% if vehicle.gbo_present %}
+                            <span class="badge bg-success">Да</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Нет</span>
+                        {% endif %}
+                    </p>
+                    {% if vehicle.gbo_present %}
+                        <p><strong>Тип ГБО:</strong> {{ vehicle.gbo_type|default:"—" }}</p>
+                        <p><strong>Объём (л):</strong> {{ vehicle.gbo_volume|default:"—" }}</p>
+                        <p><strong>Дата установки:</strong> {{ vehicle.gbo_installation_date|date:"d.m.Y"|default:"—" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Документы по срокам -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Документы по срокам</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Период ТО-2 (дней):</strong> {{ vehicle.to2_period_days|default:"—" }}</p>
+                    <p><strong>Период ТО-3 (дней):</strong> {{ vehicle.to3_period_days|default:"—" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <!-- Техосмотр с цветовой подсветкой -->
+                    <p>
+                        <strong>Дата истечения техосмотра:</strong>
+                        {% if vehicle.tech_inspection_expiry %}
+                            {% with days_left=vehicle.tech_inspection_expiry|add:0 %}
+                                <span class="badge bg-{% if vehicle.tech_inspection_expiry|date:"U" < "now"|date:"U" %}danger{% elif vehicle.tech_inspection_expiry|date:"U" < "now"|date:"U"|add:2592000 %}warning{% else %}success{% endif %}">
+                                    {{ vehicle.tech_inspection_expiry|date:"d.m.Y" }}
+                                </span>
+                            {% endwith %}
+                        {% else %}
+                            <span class="badge bg-secondary">не указана</span>
+                        {% endif %}
+                    </p>
+
+                    <!-- Страховка с цветовой подсветкой -->
+                    <p>
+                        <strong>Дата истечения страховки:</strong>
+                        {% if vehicle.insurance_expiry %}
+                            <span class="badge bg-{% if vehicle.insurance_expiry|date:"U" < "now"|date:"U" %}danger{% elif vehicle.insurance_expiry|date:"U" < "now"|date:"U"|add:2592000 %}warning{% else %}success{% endif %}">
+                                {{ vehicle.insurance_expiry|date:"d.m.Y" }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">не указана</span>
+                        {% endif %}
+                    </p>
+
+                    <!-- Диагностическая карта с цветовой подсветкой -->
+                    <p>
+                        <strong>Дата истечения диагностической карты:</strong>
+                        {% if vehicle.diagnostic_card_expiry %}
+                            <span class="badge bg-{% if vehicle.diagnostic_card_expiry|date:"U" < "now"|date:"U" %}danger{% elif vehicle.diagnostic_card_expiry|date:"U" < "now"|date:"U"|add:2592000 %}warning{% else %}success{% endif %}">
+                                {{ vehicle.diagnostic_card_expiry|date:"d.m.Y" }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">не указана</span>
+                        {% endif %}
+                    </p>
+
+                    <!-- ОСАГО с цветовой подсветкой -->
+                    <p>
+                        <strong>Дата истечения ОСАГО:</strong>
+                        {% if vehicle.osago_date_expiry %}
+                            <span class="badge bg-{% if vehicle.osago_date_expiry|date:"U" < "now"|date:"U" %}danger{% elif vehicle.osago_date_expiry|date:"U" < "now"|date:"U"|add:2592000 %}warning{% else %}success{% endif %}">
+                                {{ vehicle.osago_date_expiry|date:"d.m.Y" }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">не указана</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endwith %}  <!-- Закрытие блока с expiry_data -->
+
+<!-- Модальное окно подтверждения удаления -->
+{% if can_delete %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel"><i class="fas fa-exclamation-triangle"></i> Подтвердите удаление</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы действительно хотите удалить это транспортное средство?</p>
+                <p class="text-danger"><strong>[{{ vehicle.garage_number }}] {{ vehicle.brand_model }}</strong></p>
+                <p class="text-muted">Это действие необратимо!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form method="post" action="{% url 'cards:vehicle_delete' vehicle.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Удалить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

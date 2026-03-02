@@ -1,14 +1,137 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container">
-        <a class="navbar-brand" href="{% url 'cards:person_list' %}">
-            <i class="fas fa-id-card"></i> {{ t.title.app|default:"Карточки людей" }}
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="{% url 'cards:vehicle_list' %}">
+            <i class="fas fa-truck"></i> Система управления автопарком
         </a>
-        
-        <div class="d-flex">
-            {% with current_url=request.path %}
-                <a href="?lang=ru" class="btn btn-outline-light btn-sm me-2">RU</a>
-                <a href="?lang=en" class="btn btn-outline-light btn-sm">EN</a>
-                {% endwith %}
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu"
+                aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMenu">
+            <ul class="navbar-nav ms-auto">
+                <!-- 1. УПРАВЛЕНИЕ ПАРКОМ -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="fleetMenu" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">
+                        <i class="fas fa-warehouse"></i> Управление парком
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="fleetMenu">
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_list' %}">
+                            <i class="fas fa-list"></i> Все транспортные средства
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_add' %}">
+                            <i class="fas fa-plus-circle"></i> Добавить ТС
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_list' %}?expiring=1">
+                            <i class="fas fa-clock text-warning"></i> ТС с истекающими сроками
+                        </a></li>
+                    </ul>
+                </li>
+
+                <!-- 2. ДОКУМЕНТЫ И СРОКИ -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="docsMenu" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">
+                        <i class="fas fa-file-contract"></i> Документы
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="docsMenu">
+                        <li><h6 class="dropdown-header">Сроки действия</h6></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_list' %}">
+                            <i class="fas fa-shield-alt"></i> Полисы ОСАГО
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_list' %}">
+                            <i class="fas fa-stethoscope"></i> Техосмотры
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_list' %}">
+                            <i class="fas fa-file-invoice"></i> Диагностические карты
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Паспорта</h6></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_list' %}">
+                            <i class="fas fa-passport"></i> Посмотреть паспорта
+                        </a></li>
+                    </ul>
+                </li>
+
+                <!-- 3. ТЕХНИЧЕСКОЕ ОБСЛУЖИВАНИЕ -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="maintenanceMenu" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">
+                        <i class="fas fa-tools"></i> Техническое обслуживание
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="maintenanceMenu">
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_list' %}">
+                            <i class="fas fa-cog"></i> Период ТО-2
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_list' %}">
+                            <i class="fas fa-cog"></i> Период ТО-3
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">ГБО</h6></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_list' %}">
+                            <i class="fas fa-gas-pump"></i> ТС с ГБО
+                        </a></li>
+                    </ul>
+                </li>
+
+                <!-- 4. СИСТЕМА И ОТЧЁТЫ -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="systemMenu" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">
+                        <i class="fas fa-chart-bar"></i> Отчёты
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="systemMenu">
+                        <li><a class="dropdown-item" href="/admin/cards/auditlog/">
+                            <i class="fas fa-history"></i> Журнал аудита
+                        </a></li>
+                        <li><a class="dropdown-item" href="/admin/cards/vehicle/">
+                            <i class="fas fa-database"></i> Административная панель
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'cards:vehicle_export' %}{% if request.GET.q %}?q={{ request.GET.q }}{% endif %}">
+                            <i class="fas fa-download"></i> Экспортировать данные
+                        </a></li>
+                    </ul>
+                </li>
+
+                <!-- 5. ПРОФИЛЬ И ВЫХОД -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="profileMenu" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">
+                        <i class="fas fa-user-circle"></i>
+                        {% if user.is_authenticated %}
+                            {{ user.first_name|default:user.username }}
+                        {% else %}
+                            Вход
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="profileMenu">
+                        {% if user.is_authenticated %}
+                            {% if user.profile %}
+                            <li><a class="dropdown-item disabled">
+                                <i class="fas fa-id-badge"></i> {{ user.profile.fio }}
+                            </a></li>
+                            <li><a class="dropdown-item disabled">
+                                <i class="fas fa-briefcase"></i> {{ user.profile.position }}
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="/admin/">
+                                <i class="fas fa-cog"></i> Настройки
+                            </a></li>
+                            <li><a class="dropdown-item" href="/admin/logout/">
+                                <i class="fas fa-sign-out-alt"></i> Выход
+                            </a></li>
+                        {% else %}
+                            <li><a class="dropdown-item" href="/admin/login/">
+                                <i class="fas fa-sign-in-alt"></i> Вход в систему
+                            </a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+            </ul>
         </div>
     </div>
 </nav>

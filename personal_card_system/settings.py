@@ -50,8 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Кастомная middleware для управления языка через GET-параметр и сессию
-    'cards.middleware.LocaleMiddleware',
+    'cards.middleware.AuditMiddleware',
 ]
 
 ROOT_URLCONF = 'personal_card_system.urls'
@@ -67,7 +66,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'cards.context_processors.translations',
             ],
         },
     },
@@ -138,3 +136,50 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False
+
+
+# ===== ЛОГИРОВАНИЕ АУДИТА =====
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'audit_format': {
+            'format': '[{asctime}] {levelname} | {message}',
+            'style': '{',
+            'datefmt': '%d.%m.%Y %H:%M:%S',
+        },
+        'verbose': {
+            'format': '{levelname} {asctime} {name} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'audit_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'audit.log',
+            'maxBytes': 10485760,  # 10 MB
+            'backupCount': 30,  # Примерно 90 дней при ~3 MB в день
+            'formatter': 'audit_format',
+            'encoding': 'utf-8',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'audit': {
+            'handlers': ['audit_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Создаём папку logs если её нет
+import os as _os
+_logs_dir = BASE_DIR / 'logs'
+if not _logs_dir.exists():
+    _logs_dir.mkdir(parents=True, exist_ok=True)

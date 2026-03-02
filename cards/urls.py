@@ -1,19 +1,26 @@
 from django.urls import path
 from . import views
 
-# Пространство имён приложения — позволяет ссылаться на URL'ы как 'cards:person_list'
+# Пространство имён приложения — позволяет ссылаться на URL'ы как 'cards:vehicle_list'
 app_name = 'cards'
 
-# Основной набор маршрутов для CRUD операций с моделью Person
+# Основной набор маршрутов для CRUD операций с моделью Vehicle
 urlpatterns = [
-    # Список всех людей
-    path('', views.PersonListView.as_view(), name='person_list'),
-    # Создать нового человека
-    path('add/', views.PersonCreateView.as_view(), name='person_add'),
-    # Просмотреть детали человека по PK
-    path('<int:pk>/', views.PersonDetailView.as_view(), name='person_detail'),
+    # Список всех транспортных средств
+    path('', views.VehicleListView.as_view(), name='vehicle_list'),
+    # Создать новое ТС
+    path('add/', views.VehicleCreateView.as_view(), name='vehicle_add'),
+    # Просмотреть детали ТС по PK
+    path('<int:pk>/', views.VehicleDetailView.as_view(), name='vehicle_detail'),
     # Редактировать существующую запись
-    path('<int:pk>/edit/', views.PersonUpdateView.as_view(), name='person_edit'),
+    path('<int:pk>/edit/', views.VehicleUpdateView.as_view(), name='vehicle_edit'),
     # Удалить запись (DeleteView ожидает POST из шаблона)
-    path('<int:pk>/delete/', views.PersonDeleteView.as_view(), name='person_delete'),
+    path('<int:pk>/delete/', views.VehicleDeleteView.as_view(), name='vehicle_delete'),
+    # Экспортировать в Excel
+    path('export/', views.VehicleExportView.as_view(), name='vehicle_export'),
+    # Архивировать ТС
+    path('<int:pk>/archive/', views.VehicleArchiveView.as_view(), name='vehicle_archive'),
+    # Восстановить ТС из архива
+    path('<int:pk>/unarchive/', views.VehicleUnarchiveView.as_view(), name='vehicle_unarchive'),
 ]
+

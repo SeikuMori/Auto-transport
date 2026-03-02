@@ -1,27 +1,46 @@
-class LocaleMiddleware:
+import threading
+
+# Thread-local storage для сохранения информации о текущем пользователе
+_thread_locals = threading.local()
+
+
+def get_current_user():
+    """Получить текущего пользователя из thread-local storage"""
+    return getattr(_thread_locals, 'user', None)
+
+
+def get_current_ip():
+    """Получить IP текущего пользователя из thread-local storage"""
+    return getattr(_thread_locals, 'ip', None)
+
+
+class AuditMiddleware:
     """
-    Простая middleware для управления языком интерфейса через GET-параметр.
-
-    Поведение:
-    - если в GET есть параметр `lang`, он сохраняется в сессии как `language`
-    - текущее значение языка сохраняется в `request.LANGUAGE` для использования в шаблонах/коде
-
-    Это облегчает переключение языка в приложении без использования полного механизма i18n Django.
+    Middleware для сохранения информации о текущем пользователе и IP адресе.
+    Информация сохраняется в thread-local переменных для доступа из signals.
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # Проверяем GET-параметр 'lang' и сохраняем в сессию
-        lang = request.GET.get('lang')
-        if lang:
-            request.session['language'] = lang.lower()
-            # В dev удобно видеть в консоли — в проде лучше использовать логгер
-            print(f"Language changed to {lang} — session updated")  # Дебаг
-        # Берём язык из сессии, если нет — по умолчанию 'ru'
-        lang = request.session.get('language', 'ru')
-        request.LANGUAGE = lang
-        print(f"Current language: {lang}")  # Дебаг
+        # Сохраняем пользователя и IP в thread-local storage
+        _thread_locals.user = request.user
+        _thread_locals.ip = self._get_client_ip(request)
+
+        # Также сохраняем в объект запроса для прямого доступа
+        request.audit_user = request.user
+        request.audit_ip = _thread_locals.ip
+
         response = self.get_response(request)
         return response
+
+    @staticmethod
+    def _get_client_ip(request):
+        """Получить IP адрес клиента из различных источников"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block title %}Список транспортных средств{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h1 class="mb-4">Список транспортных средств</h1>
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <form method="get" class="d-flex">
+                <input name="q" class="form-control me-2" placeholder="Поиск по: гараж. №, VIN, ГРЗ, марке, ОСАГО, диагн. карте..." value="{{ request.GET.q }}" title="Поиск по гаражному номеру, VIN, государственному номеру (ГРЗ), марке и модели, номеру ОСАГО или диагностической карте">
+                <button class="btn btn-outline-primary" type="submit">
+                    <i class="fas fa-search"></i> Найти
+                </button>
+            </form>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'cards:vehicle_export' %}{% if request.GET.q %}?q={{ request.GET.q }}{% endif %}" class="btn btn-info btn-lg shadow me-2">
+                <i class="fas fa-download me-2"></i> Экспорт
+            </a>
+            <a href="{% url 'cards:vehicle_add' %}" class="btn btn-success btn-lg shadow">
+                <i class="fas fa-plus me-2"></i> Добавить ТС
+            </a>
+        </div>
+    </div>
+
+    {% if vehicles %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Гаражный номер</th>
+                    <th>Марка и модель</th>
+                    <th>VIN номер</th>
+                    <th>Тип паспорта</th>
+                    <th style="text-align: center;">Статус документов</th>
+                    <th class="text-end">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vehicle in vehicles %}
+                <tr {% if vehicle.has_expiring_documents %}style="background-color: rgba(255, 193, 7, 0.1);"{% endif %}>
+                    <td>
+                        <a href="{% url 'cards:vehicle_detail' vehicle.pk %}" class="text-decoration-none fw-bold text-primary">
+                            {{ vehicle.garage_number }}
+                        </a>
+                    </td>
+                    <td>{{ vehicle.brand_model }}</td>
+                    <td>{{ vehicle.vin }}</td>
+                    <td>
+                        {% if vehicle.pts_type == 'pts' %}
+                            <span class="badge bg-info">ПТС</span>
+                        {% else %}
+                            <span class="badge bg-success">ЭПТС</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% with status=vehicle.get_expiry_status %}
+                            {% if status.0 == 'danger' %}
+                                <span class="badge bg-danger" title="{{ status.1 }}">
+                                    <i class="fas fa-exclamation-circle"></i> ИСТЕКЛО
+                                </span>
+                            {% elif status.0 == 'warning' %}
+                                <span class="badge bg-warning text-dark" title="{{ status.1 }}">
+                                    <i class="fas fa-clock"></i> СКОРО
+                                </span>
+                            {% elif status.0 == 'info' %}
+                                <span class="badge bg-info" title="{{ status.1 }}">
+                                    <i class="fas fa-info-circle"></i> ПУСТО
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success" title="{{ status.1 }}">
+                                    <i class="fas fa-check-circle"></i> ОК
+                                </span>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'cards:vehicle_edit' vehicle.pk %}" class="btn btn-sm btn-warning" title="Редактировать">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form method="post" action="{% url 'cards:vehicle_delete' vehicle.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger ms-1" title="Удалить" onclick="return confirm('Вы уверены, что хотите удалить это транспортное средство?');">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <div class="text-center py-5 my-5">
+        <i class="fas fa-truck fa-5x text-muted mb-4"></i>
+        <h3 class="text-muted">Нет добавленных транспортных средств</h3>
+        <p class="text-muted">Начните с добавления первого транспортного средства</p>
+        <a href="{% url 'cards:vehicle_add' %}" class="btn btn-success btn-lg mt-3">
+            <i class="fas fa-plus me-2"></i> Добавить первое ТС
+        </a>
+    </div>
+    {% endif %}
+
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center mt-4">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Назад</a></li>
+            {% endif %}
+            <li class="page-item disabled"><a class="page-link">Страница {{ page_obj.number }} из {{ paginator.num_pages }}</a></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Вперёд</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}

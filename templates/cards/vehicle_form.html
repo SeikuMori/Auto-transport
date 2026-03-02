@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        Редактировать ТС
+    {% else %}
+        Добавить новое ТС
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h2 class="mb-4">
+                {% if form.instance.pk %}
+                    Редактировать: [{{ form.instance.garage_number }}] {{ form.instance.brand_model }}
+                {% else %}
+                    Добавить новое транспортное средство
+                {% endif %}
+            </h2>
+
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <!-- Блок 1: Основные реквизиты -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-car"></i> Основные реквизиты</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.garage_number %}
+                                {% bootstrap_field form.brand_model %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.vin %}
+                                <!-- Поле фото с кастомным UI -->
+                                <div class="mb-3">
+                                    <label class="form-label">Фотография ТС</label>
+                                    <div class="d-flex align-items-center">
+                                        <label for="id_photo" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-image"></i> Выберите файл
+                                        </label>
+                                        <span id="photo-file-name" class="text-muted">Файл не выбран</span>
+                                    </div>
+                                    <input type="file" name="photo" id="id_photo" style="display:none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 2: Характеристики -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-sliders-h"></i> Характеристики</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.color %}
+                                {% bootstrap_field form.vehicle_type %}
+                                {% bootstrap_field form.category %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.fuel_type %}
+                                {% bootstrap_field form.body_type %}
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="mb-3">Технические характеристики</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.mass_kg %}
+                                {% bootstrap_field form.mileage_km %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.engine_volume %}
+                                {% bootstrap_field form.engine_power_hp %}
+                                {% bootstrap_field form.axles_count %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 3: Паспорт ТС -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-passport"></i> Паспорт ТС (ПТС/ЭПТС)</h5>
+                    </div>
+                    <div class="card-body">
+                        {% bootstrap_field form.pts_type %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Бумажный паспорт (ПТС)</h6>
+                                {% bootstrap_field form.pts_series %}
+                                {% bootstrap_field form.pts_number %}
+                                {% bootstrap_field form.pts_date %}
+                                <div class="mb-3">
+                                    <label class="form-label">Скан ПТС</label>
+                                    <div class="d-flex align-items-center">
+                                        <label for="id_pts_scan" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-file"></i> Выберите файл
+                                        </label>
+                                        <span id="pts_scan-file-name" class="text-muted">Файл не выбран</span>
+                                    </div>
+                                    <input type="file" name="pts_scan" id="id_pts_scan" style="display:none">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Электронный паспорт (ЭПТС)</h6>
+                                {% bootstrap_field form.epts_number %}
+                                {% bootstrap_field form.epts_date %}
+                                <div class="mb-3">
+                                    <label class="form-label">Скан ЭПТС</label>
+                                    <div class="d-flex align-items-center">
+                                        <label for="id_epts_scan" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-file"></i> Выберите файл
+                                        </label>
+                                        <span id="epts_scan-file-name" class="text-muted">Файл не выбран</span>
+                                    </div>
+                                    <input type="file" name="epts_scan" id="id_epts_scan" style="display:none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 4: Регистрационные данные ГИБДД -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-id-card"></i> Регистрационные данные ГИБДД</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- ГРЗ -->
+                        <h6 class="mb-3">Государственный номер (ГРЗ)</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                {% bootstrap_field form.grz_series %}
+                            </div>
+                            <div class="col-md-4">
+                                {% bootstrap_field form.grz_number %}
+                            </div>
+                            <div class="col-md-5">
+                                {% bootstrap_field form.grz_date %}
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Свидетельство о регистрации -->
+                        <h6 class="mb-3">Свидетельство о регистрации</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {% bootstrap_field form.reg_certificate_series %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% bootstrap_field form.reg_certificate_number %}
+                                    </div>
+                                </div>
+                                {% bootstrap_field form.reg_certificate_date %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Скан свидетельства</label>
+                                    <div class="d-flex align-items-center">
+                                        <label for="id_reg_certificate_scan" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-file"></i> Выберите файл
+                                        </label>
+                                        <span id="reg_certificate_scan-file-name" class="text-muted">Файл не выбран</span>
+                                    </div>
+                                    <input type="file" name="reg_certificate_scan" id="id_reg_certificate_scan" style="display:none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- ОСАГО -->
+                        <h6 class="mb-3">Полис ОСАГО (обязательное страхование)</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.osago_number %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {% bootstrap_field form.osago_date_issued %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% bootstrap_field form.osago_date_expiry %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Скан полиса ОСАГО</label>
+                                    <div class="d-flex align-items-center">
+                                        <label for="id_osago_scan" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-file"></i> Выберите файл
+                                        </label>
+                                        <span id="osago_scan-file-name" class="text-muted">Файл не выбран</span>
+                                    </div>
+                                    <input type="file" name="osago_scan" id="id_osago_scan" style="display:none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Диагностическая карта -->
+                        <h6 class="mb-3">Диагностическая карта</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.diagnostic_card_number %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {% bootstrap_field form.diagnostic_card_date %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% bootstrap_field form.diagnostic_card_expiry %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Скан диагностической карты</label>
+                                    <div class="d-flex align-items-center">
+                                        <label for="id_diagnostic_card_scan" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-file"></i> Выберите файл
+                                        </label>
+                                        <span id="diagnostic_card_scan-file-name" class="text-muted">Файл не выбран</span>
+                                    </div>
+                                    <input type="file" name="diagnostic_card_scan" id="id_diagnostic_card_scan" style="display:none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 5: ГБО -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="fas fa-gas-pump"></i> ГБО (газобаллонное оборудование)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.gbo_present %}
+                                {% bootstrap_field form.gbo_type %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.gbo_volume %}
+                                {% bootstrap_field form.gbo_installation_date %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 6: Документы по срокам -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Документы по срокам</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% bootstrap_field form.to2_period_days %}
+                                {% bootstrap_field form.to3_period_days %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.tech_inspection_expiry %}
+                                {% bootstrap_field form.insurance_expiry %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки действия -->
+                <div class="d-flex gap-2 mb-4">
+                    <button type="submit" class="btn btn-success btn-lg flex-grow-1">
+                        <i class="fas fa-save me-2"></i>
+                        {% if form.instance.pk %}
+                            Сохранить изменения
+                        {% else %}
+                            Добавить ТС
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'cards:vehicle_list' %}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Отмена
+                    </a>
+                </div>
+
+                <!-- Вывод ошибок формы (если есть) -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Функция для отображения имени выбранного файла
+    function setupFileInput(inputId, displayId) {
+        const input = document.getElementById(inputId);
+        const display = document.getElementById(displayId);
+        if (input && display) {
+            input.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    display.textContent = this.files[0].name;
+                } else {
+                    display.textContent = 'Файл не выбран';
+                }
+            });
+        }
+    }
+
+    // Инициализация для всех файловых полей
+    setupFileInput('id_photo', 'photo-file-name');
+    setupFileInput('id_pts_scan', 'pts_scan-file-name');
+    setupFileInput('id_epts_scan', 'epts_scan-file-name');
+    setupFileInput('id_reg_certificate_scan', 'reg_certificate_scan-file-name');
+    setupFileInput('id_osago_scan', 'osago_scan-file-name');
+    setupFileInput('id_diagnostic_card_scan', 'diagnostic_card_scan-file-name');
+});
+</script>
+{% endblock %}
