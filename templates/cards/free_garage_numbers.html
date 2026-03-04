@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Свободные гаражные номера{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <div class="row">
+        <!-- Статистика -->
+        <div class="col-lg-12">
+            <h2 class="mb-4">
+                <i class="fas fa-parking"></i> Свободные гаражные номера
+            </h2>
+
+            <!-- Карточки статистики -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center border-primary">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Используемые номера</h6>
+                            <h3 class="text-primary">{{ total_used }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Свободные номера</h6>
+                            <h3 class="text-success">{{ total_free }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-info">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Всего доступно</h6>
+                            <h3 class="text-info">{{ total_possible }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-warning">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Процент использования</h6>
+                            <h3 class="text-warning">
+                                {% widthratio total_used total_possible 100 %}%
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Две таблицы рядом -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-circle text-danger"></i> Используемые номера ({{ total_used }})
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if used_numbers %}
+                        <div class="row g-2">
+                            {% for number in used_numbers %}
+                                <div class="col-4">
+                                    <span class="badge bg-danger">{{ number }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle"></i> Нет используемых номеров
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-circle text-success"></i> Свободные номера (первые 100 из {{ total_free }})
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if free_numbers %}
+                        <div class="row g-2">
+                            {% for number in free_numbers %}
+                                <div class="col-4">
+                                    <span class="badge bg-success">{{ number }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if total_free > 100 %}
+                            <div class="alert alert-info mt-3 mb-0">
+                                <small>
+                                    <i class="fas fa-info-circle"></i>
+                                    Отображены первые 100 номеров из {{ total_free }} доступных
+                                </small>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle"></i> Нет свободных номеров!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информация -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="alert alert-info">
+                <strong><i class="fas fa-lightbulb"></i> Подсказка:</strong>
+                Вы можете использовать любой из зелёных номеров для новых транспортных средств.
+                При добавлении новой ТС система автоматически проверит доступность номера.
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопка возврата -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <a href="{% url 'cards:vehicle_list' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Вернуться к списку ТС
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -28,5 +28,17 @@ urlpatterns = [
     path('employees/import/', views.EmployeeImportView.as_view(), name='employee_import'),
     # Расписание ТО-2
     path('maintenance/', views.MaintenanceScheduleView.as_view(), name='maintenance_schedule'),
+
+    # ===== СИСТЕМА (НОВЫЕ МАРШРУТЫ) =====
+    # Настройки приложения
+    path('settings/', views.SettingsView.as_view(), name='settings'),
+    # Справочная информация
+    path('about/', views.AboutView.as_view(), name='about'),
+    # Свободные гаражные номера
+    path('free-garage-numbers/', views.FreeGarageNumbersView.as_view(), name='free_garage_numbers'),
+    # Главная страница техническое обслуживание
+    path('maintenance-base/', views.MaintenanceBaseView.as_view(), name='maintenance_base'),
+    # Главная страница отчётов
+    path('reports/', views.ReportsBaseView.as_view(), name='reports_base'),
 ]
 

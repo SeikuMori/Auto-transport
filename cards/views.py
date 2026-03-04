@@ -1,4 +1,4 @@
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, View
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, View, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.db.models import Q
@@ -685,5 +685,194 @@ class MaintenanceScheduleView(LoginRequiredMixin, ListView):
         context['in_progress_count'] = MS.objects.filter(status='in_progress').count()
         context['overdue_count'] = MS.objects.filter(status='overdue').count()
         context['completed_count'] = MS.objects.filter(status='completed').count()
+
+        return context
+
+
+# ===== СИСТЕМА (НАСТРОЙКИ И ИНФОРМАЦИЯ) =====
+
+class SettingsView(LoginRequiredMixin, TemplateView):
+    """
+    Страница настроек приложения.
+
+    Позволяет пользователям настраивать:
+    - Автозапуск приложения
+    - Оповещения в WC03P
+    - Оповещения в ПП
+    - Выбор шрифта (Times New Roman/Arial)
+    - Размер шрифта (6-72)
+
+    Требует аутентификации.
+    """
+    template_name = 'cards/settings.html'
+    login_url = 'admin:login'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Получаем текущие настройки из сессии
+        context['autostart'] = self.request.session.get('autostart', True)
+        context['notify_wc03p'] = self.request.session.get('notify_wc03p', False)
+        context['notify_app'] = self.request.session.get('notify_app', True)
+        context['font_family'] = self.request.session.get('font_family', 'Arial')
+        context['font_size'] = self.request.session.get('font_size', 14)
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Сохранить настройки в сессию"""
+        from django.shortcuts import redirect
+
+        # Сохраняем настройки
+        request.session['autostart'] = request.POST.get('autostart') == 'on'
+        request.session['notify_wc03p'] = request.POST.get('notify_wc03p') == 'on'
+        request.session['notify_app'] = request.POST.get('notify_app') == 'on'
+        request.session['font_family'] = request.POST.get('font_family', 'Arial')
+        request.session['font_size'] = int(request.POST.get('font_size', 14))
+
+        # Логируем действие
+        from .models import AuditLog
+        AuditLog.objects.create(
+            user_fio=request.user.profile.fio if hasattr(request.user, 'profile') else request.user.username,
+            username=request.user.username,
+            action='UPDATE',
+            model_name='Settings',
+            object_description='Пользовательские настройки приложения',
+            ip_address=self._get_client_ip(request)
+        )
+
+        return redirect('cards:settings')
+
+    @staticmethod
+    def _get_client_ip(request):
+        """Получить IP адрес клиента"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+
+
+class AboutView(LoginRequiredMixin, TemplateView):
+    """
+    Справочная информация о программе.
+
+    Содержит:
+    - Основные правила использования
+    - Информацию о правах интеллектуальной собственности
+    - Версию программы
+    - Контактную информацию
+
+    Требует аутентификации.
+    """
+    template_name = 'cards/about.html'
+    login_url = 'admin:login'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['app_name'] = 'Система управления автотранспортом'
+        context['version'] = '1.0.0'
+        context['company'] = 'ЭХП РОСАТОМ, Автотранспортный цех 013'
+        context['contact_email'] = 'support@example.com'
+        context['copyright_year'] = '2025'
+
+        return context
+
+
+class FreeGarageNumbersView(LoginRequiredMixin, TemplateView):
+    """
+    Список свободных гаражных номеров.
+
+    Показывает:
+    - Используемые гаражные номера
+    - Свободные гаражные номера
+    - Возможность поиска по диапазону
+    - Статус каждого номера
+
+    Требует аутентификации.
+    """
+    template_name = 'cards/free_garage_numbers.html'
+    login_url = 'admin:login'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        from .models import Vehicle
+
+        # Получаем все используемые номера
+        used_numbers = set(
+            Vehicle.objects.filter(is_archived=False)
+            .values_list('garage_number', flat=True)
+            .distinct()
+        )
+
+        # Определяем диапазон (предположим 1-1000)
+        all_numbers = set(range(1, 1001))
+        free_numbers = sorted(list(all_numbers - used_numbers))
+
+        context['used_numbers'] = sorted(list(used_numbers))
+        context['free_numbers'] = free_numbers[:100]  # Первые 100 свободных для отображения
+        context['total_free'] = len(free_numbers)
+        context['total_used'] = len(used_numbers)
+        context['total_possible'] = 1000
+
+        return context
+
+
+class MaintenanceBaseView(LoginRequiredMixin, TemplateView):
+    """
+    Главная страница раздела "Техническое обслуживание".
+
+    Служит контейнером для подменю ТО:
+    - Проведение ТО-2
+    - ТС для проведения ТО-2
+    - Графики (ГТО/ОСАГО, ГБО, ДПОГ)
+
+    Требует аутентификации.
+    """
+    template_name = 'cards/maintenance_base.html'
+    login_url = 'admin:login'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        from .models import MaintenanceSchedule
+
+        # Статистика по ТО-2
+        context['total_maintenance'] = MaintenanceSchedule.objects.count()
+        context['scheduled_count'] = MaintenanceSchedule.objects.filter(status='scheduled').count()
+        context['in_progress_count'] = MaintenanceSchedule.objects.filter(status='in_progress').count()
+        context['overdue_count'] = MaintenanceSchedule.objects.filter(status='overdue').count()
+
+        return context
+
+
+class ReportsBaseView(LoginRequiredMixin, TemplateView):
+    """
+    Главная страница раздела "Отчёты".
+
+    Служит контейнером для подменю отчётов:
+    - Журнал аудита
+    - Таблицы справочников
+    - Экспорт данных
+
+    Требует аутентификации.
+    """
+    template_name = 'cards/reports_base.html'
+    login_url = 'admin:login'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        from .models import AuditLog, Vehicle, MaintenanceSchedule
+
+        # Статистика
+        context['total_vehicles'] = Vehicle.objects.filter(is_archived=False).count()
+        context['archived_vehicles'] = Vehicle.objects.filter(is_archived=True).count()
+        context['recent_audits'] = AuditLog.objects.all()[:10]
+        context['total_audits'] = AuditLog.objects.count()
+        context['maintenance_records'] = MaintenanceSchedule.objects.count()
 
         return context

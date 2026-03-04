@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Настройки приложения{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-sliders-h"></i> Основные настройки приложения
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Форма настроек -->
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+
+                        <!-- Опция 1: Автозапуск -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="autostart" name="autostart"
+                                       {% if autostart %}checked{% endif %}>
+                                <label class="form-check-label" for="autostart">
+                                    <i class="fas fa-play-circle"></i> Автозапуск приложения из группы «Автозагрузка»
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Опция 2: Оповещения в WC03P -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="notify_wc03p" name="notify_wc03p"
+                                       {% if notify_wc03p %}checked{% endif %}>
+                                <label class="form-check-label" for="notify_wc03p">
+                                    <i class="fas fa-bell"></i> Направлять оповещения в WC03P
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Опция 3: Оповещения в ПП -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="notify_app" name="notify_app"
+                                       checked>
+                                <label class="form-check-label" for="notify_app">
+                                    <i class="fas fa-notification"></i> Включить оповещения в ПП
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Секция: Шрифты -->
+                        <h5 class="mt-4 mb-3">
+                            <i class="fas fa-font"></i> Настройки шрифтов
+                        </h5>
+
+                        <!-- Выбор шрифта -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="font_family" class="form-label">Шрифт ПП:</label>
+                                <select class="form-select" id="font_family" name="font_family">
+                                    <option value="Arial" {% if font_family == 'Arial' %}selected{% endif %}>
+                                        Arial
+                                    </option>
+                                    <option value="Times New Roman" {% if font_family == 'Times New Roman' %}selected{% endif %}>
+                                        Times New Roman
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Размер шрифта -->
+                            <div class="col-md-6">
+                                <label for="font_size" class="form-label">Размер шрифта:</label>
+                                <div class="input-group">
+                                    <input type="range" class="form-range" id="font_size" name="font_size"
+                                           min="6" max="72" value="{{ font_size }}" step="1">
+                                    <span class="input-group-text" id="font_size_display">{{ font_size }}px</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preview шрифта -->
+                        <div class="alert alert-info mt-3">
+                            <p id="font_preview" style="font-family: {{ font_family }}; font-size: {{ font_size }}px;">
+                                Это предпросмотр выбранного шрифта и размера
+                            </p>
+                        </div>
+
+                        <hr>
+
+                        <!-- Кнопки -->
+                        <div class="d-flex gap-2 justify-content-center mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Применить
+                            </button>
+                            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#resetModal">
+                                <i class="fas fa-redo"></i> Удалить текущие настройки
+                            </button>
+                            <a href="{% url 'cards:vehicle_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения сброса настроек -->
+<div class="modal fade" id="resetModal" tabindex="-1" aria-labelledby="resetModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-warning">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="resetModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Подтвердите сброс
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы действительно хотите удалить все текущие настройки?</p>
+                <p class="text-muted">Будут восстановлены параметры по умолчанию.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-warning" onclick="resetSettings()">
+                    <i class="fas fa-redo"></i> Удалить настройки
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Обновление предпросмотра при изменении шрифта
+document.getElementById('font_family').addEventListener('change', function() {
+    const preview = document.getElementById('font_preview');
+    preview.style.fontFamily = this.value;
+});
+
+// Обновление предпросмотра и дисплея при изменении размера
+document.getElementById('font_size').addEventListener('input', function() {
+    const preview = document.getElementById('font_preview');
+    const display = document.getElementById('font_size_display');
+    preview.style.fontSize = this.value + 'px';
+    display.textContent = this.value + 'px';
+});
+
+// Функция сброса настроек
+function resetSettings() {
+    // Сбрасываем в хранилище браузера
+    sessionStorage.clear();
+    localStorage.clear();
+
+    // Перезагружаем страницу
+    location.reload();
+}
+</script>
+
+<style>
+    body {
+        font-family: {{ font_family }};
+        font-size: {{ font_size }}px;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Техническое обслуживание{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <h2 class="mb-4">
+        <i class="fas fa-wrench"></i> Техническое обслуживание
+    </h2>
+
+    <!-- Статистика ТО-2 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Всего записей</h6>
+                    <h3 class="text-info">{{ total_maintenance }}</h3>
+                    <p class="text-muted mb-0"><small>ТО-2 в системе</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Запланировано</h6>
+                    <h3 class="text-success">{{ scheduled_count }}</h3>
+                    <p class="text-muted mb-0"><small>ожидают проведения</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">В процессе</h6>
+                    <h3 class="text-warning">{{ in_progress_count }}</h3>
+                    <p class="text-muted mb-0"><small>се йчас обслуживаются</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Просроченные</h6>
+                    <h3 class="text-danger">{{ overdue_count }}</h3>
+                    <p class="text-muted mb-0"><small>требуют внимания</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Разделы ТО -->
+    <div class="row">
+        <!-- Проведение ТО-2 -->
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-hammer"></i> Проведение ТО-2
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Функционал для регистрации и управления проведением
+                        технического обслуживания второго уровня (ТО-2)
+                        для автотранспортных средств.
+                    </p>
+                    <p class="text-muted"><small>
+                        Отслеживание дат, статусов и результатов ТО-2
+                    </small></p>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{% url 'cards:maintenance_schedule' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-arrow-right"></i> Перейти
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ТС для проведения ТО-2 -->
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt"></i> ТС для проведения ТО-2
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Список транспортных средств, требующих проведения ТО-2.
+                        Фильтрация по статусу и срокам проведения.
+                    </p>
+                    <p class="text-muted"><small>
+                        Выбор ТС для составления графика работ
+                    </small></p>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{% url 'cards:maintenance_schedule' %}" class="btn btn-sm btn-info">
+                        <i class="fas fa-arrow-right"></i> Перейти
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Графики -->
+    <h4 class="mt-4 mb-3">
+        <i class="fas fa-chart-line"></i> Графики и расписания
+    </h4>
+
+    <div class="row">
+        <!-- График ГТО/ОСАГО -->
+        <div class="col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-check-circle"></i> График ГТО, ОСАГО
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text small">
+                        Расписание прохождения государственного технического осмотра
+                        и полисов обязательного страхования.
+                    </p>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{% url 'cards:maintenance_schedule' %}?type=inspection" class="btn btn-sm btn-success">
+                        <i class="fas fa-arrow-right"></i> Просмотр
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- График ГБО -->
+        <div class="col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-gas-pump"></i> График ГБО
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text small">
+                        Расписание проверки и обслуживания газобаллонного оборудования
+                        для автотранспорта.
+                    </p>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{% url 'cards:maintenance_schedule' %}?type=gbo" class="btn btn-sm btn-warning">
+                        <i class="fas fa-arrow-right"></i> Просмотр
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- График ДПОГ -->
+        <div class="col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-certificate"></i> График ДПОГ
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text small">
+                        Расписание проведения диагностических и профилактических
+                        осмотров глушителей.
+                    </p>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{% url 'cards:maintenance_schedule' %}?type=dpo" class="btn btn-sm btn-secondary">
+                        <i class="fas fa-arrow-right"></i> Просмотр
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информация и рекомендации -->
+    <div class="alert alert-info mt-4">
+        <h6><i class="fas fa-lightbulb"></i> Справка по видам обслуживания:</h6>
+        <ul class="mb-0">
+            <li><strong>ТО-2:</strong> Техническое обслуживание второго уровня - проводится каждые 15,000 км</li>
+            <li><strong>ГТО:</strong> Государственный технический осмотр - обязателен 1 раз в год</li>
+            <li><strong>ОСАГО:</strong> Полис обязательного страхования - действует 1 год</li>
+            <li><strong>ГБО:</strong> Техническое обслуживание газобаллонного оборудования</li>
+            <li><strong>ДПОГ:</strong> Диагностический и профилактический осмотр глушителя</li>
+        </ul>
+    </div>
+
+    <!-- Кнопка возврата -->
+    <div class="mt-4">
+        <a href="{% url 'cards:vehicle_list' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Вернуться к списку ТС
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -932,81 +932,65 @@ class Vehicle(models.Model):
     def get_expiring_documents(self, days_threshold=30):
         """
         Получить список документов, которые истекают в течение N дней.
+        Проверяет все 6 документов: ОСАГО, техосмотр, диагностическая карта,
+        проверка ГБО, проверка ДПОГ и калибровка тахографа.
 
         Args:
             days_threshold: количество дней для нежелательных сроков (по умолчанию 30)
 
         Returns:
-            dict с ключами: 'expiring', 'expired', 'ok'
+            dict с ключами: 'expired', 'expiring', 'ok', 'warnings' (отсортирован по приоритету)
         """
         from datetime import date, timedelta
 
         result = {
-            'expiring': [],      # Истекает в течение 30 дней
-            'expired': [],       # Истекло
-            'warnings': [],      # Предупреждения (пусто значение)
-            'ok': [],           # В норме
+            'expired': [],        # Истекло (КРИТИЧНО - красный)
+            'expiring': [],       # Истекает в течение N дней (ВНИМАНИЕ - жёлтый)
+            'ok': [],            # В норме (зелёный)
+            'warnings': [],      # Предупреждения (пусто значение - серый)
         }
 
         today = date.today()
         threshold_date = today + timedelta(days=days_threshold)
 
-        # Проверяем ОСАГО
-        if self.osago_date_expiry:
-            if self.osago_date_expiry < today:
-                result['expired'].append({
-                    'name': 'Полис ОСАГО',
-                    'date': self.osago_date_expiry,
-                    'days_left': (self.osago_date_expiry - today).days
-                })
-            elif self.osago_date_expiry <= threshold_date:
-                result['expiring'].append({
-                    'name': 'Полис ОСАГО',
-                    'date': self.osago_date_expiry,
-                    'days_left': (self.osago_date_expiry - today).days
-                })
-            else:
-                result['ok'].append({'name': 'Полис ОСАГО', 'date': self.osago_date_expiry})
-        else:
-            result['warnings'].append({'name': 'Полис ОСАГО не указан'})
+        # Список документов и их полей для проверки
+        documents = [
+            (self.osago_date_expiry, 'Полис ОСАГО'),
+            (self.tech_inspection_expiry, 'Техосмотр'),
+            (self.diagnostic_card_expiry, 'Диагностическая карта'),
+            (self.gbo_next_inspection_date, 'Проверка ГБО'),
+            (self.dprg_next_inspection_date, 'Проверка ДПОГ'),
+            (self.tachograph_next_calibration_date, 'Калибровка тахографа'),
+        ]
 
-        # Проверяем техосмотр
-        if self.tech_inspection_expiry:
-            if self.tech_inspection_expiry < today:
-                result['expired'].append({
-                    'name': 'Техосмотр',
-                    'date': self.tech_inspection_expiry,
-                    'days_left': (self.tech_inspection_expiry - today).days
-                })
-            elif self.tech_inspection_expiry <= threshold_date:
-                result['expiring'].append({
-                    'name': 'Техосмотр',
-                    'date': self.tech_inspection_expiry,
-                    'days_left': (self.tech_inspection_expiry - today).days
-                })
+        # Проверяем каждый документ
+        for doc_date, doc_name in documents:
+            if doc_date:
+                if doc_date < today:
+                    # ИСТЕКЛО - красный (danger)
+                    result['expired'].append({
+                        'name': doc_name,
+                        'date': doc_date,
+                        'days_left': (doc_date - today).days
+                    })
+                elif doc_date <= threshold_date:
+                    # ИСТЕКАЕТ в течение N дней - жёлтый (warning)
+                    result['expiring'].append({
+                        'name': doc_name,
+                        'date': doc_date,
+                        'days_left': (doc_date - today).days
+                    })
+                else:
+                    # ОК - зелёный (success)
+                    result['ok'].append({
+                        'name': doc_name,
+                        'date': doc_date
+                    })
             else:
-                result['ok'].append({'name': 'Техосмотр', 'date': self.tech_inspection_expiry})
-        else:
-            result['warnings'].append({'name': 'Техосмотр не указан'})
-
-        # Проверяем диагностическую карту
-        if self.diagnostic_card_expiry:
-            if self.diagnostic_card_expiry < today:
-                result['expired'].append({
-                    'name': 'Диагностическая карта',
-                    'date': self.diagnostic_card_expiry,
-                    'days_left': (self.diagnostic_card_expiry - today).days
+                # НЕ УКАЗАНО - серый (info)
+                result['warnings'].append({
+                    'name': f'{doc_name} не указана'
                 })
-            elif self.diagnostic_card_expiry <= threshold_date:
-                result['expiring'].append({
-                    'name': 'Диагностическая карта',
-                    'date': self.diagnostic_card_expiry,
-                    'days_left': (self.diagnostic_card_expiry - today).days
-                })
-            else:
-                result['ok'].append({'name': 'Диагностическая карта', 'date': self.diagnostic_card_expiry})
-        else:
-            result['warnings'].append({'name': 'Диагностическая карта не указана'})
 
         return result
 
@@ -1037,18 +1021,55 @@ class Vehicle(models.Model):
     def get_days_until_expiry(self):
         """
         Получить минимальное количество дней до истечения любого документа.
+        Проверяет все 6 документов, не только основные 3.
 
         Returns:
-            int: дни до ближайшего истечения, или None если все заполнено
+            int: дни до ближайшего истечения, или None если все заполнено и сроки нормальны
         """
         from datetime import date
 
-        dates = filter(None, [self.osago_date_expiry, self.tech_inspection_expiry, self.diagnostic_card_expiry])
+        # Все поля дат для проверки (6 документов)
+        date_fields = [
+            self.osago_date_expiry,
+            self.tech_inspection_expiry,
+            self.diagnostic_card_expiry,
+            self.gbo_next_inspection_date,
+            self.dprg_next_inspection_date,
+            self.tachograph_next_calibration_date,
+        ]
+
+        # Фильтруем заполненные даты
+        filled_dates = [d for d in date_fields if d is not None]
+
+        if not filled_dates:
+            return None
+
         today = date.today()
+        # Вычисляем дни до истечения для каждой даты
+        days_list = [(d - today).days for d in filled_dates]
 
-        days_list = [(d - today).days for d in dates if d >= today]
-
+        # Возвращаем наименьшее значение (ближайшую дату)
         return min(days_list) if days_list else None
+
+    def get_expiry_class(self, days_threshold=30):
+        """
+        Получить CSS класс для подсвечивания строки таблицы.
+        Используется в шаблонах для класса-based highlighting вместо inline styles.
+
+        Args:
+            days_threshold: количество дней для определения "warning" статуса (по умолчанию 30)
+
+        Returns:
+            str: 'row-expired' (красно), 'row-expiring' (жёлтый), или '' (белый/нормальный)
+        """
+        expiring = self.get_expiring_documents(days_threshold)
+
+        if expiring['expired']:
+            return 'row-expired'  # Красное выделение
+        elif expiring['expiring']:
+            return 'row-expiring'  # Жёлтое выделение
+        else:
+            return ''  # Нет специального выделения
 
     def __str__(self):
         # Строковое представление: гаражный номер + марка/модель

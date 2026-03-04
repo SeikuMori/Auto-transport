@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Справочная информация{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> {{ app_name }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Версия и компания -->
+                    <div class="alert alert-primary">
+                        <h5>
+                            <i class="fas fa-building"></i> {{ company }}
+                        </h5>
+                        <p class="mb-0">
+                            <strong>Версия:</strong> {{ version }}<br>
+                            <strong>Год:</strong> © {{ copyright_year }}
+                        </p>
+                    </div>
+
+                    <!-- Основные правила -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-list-check"></i> Основные правила пользования ПП
+                    </h5>
+                    <ul>
+                        <li>Все действия пользователей логируются и могут быть проверены администратором</li>
+                        <li>Доступ предоставляется в зависимости от вашей функциональной роли</li>
+                        <li>Критичные операции требуют подтверждения</li>
+                        <li>Данные о транспортных средствах должны быть актуальными и полными</li>
+                        <li>При возникновении вопросов обратитесь в техническую поддержку</li>
+                    </ul>
+
+                    <!-- Права интеллектуальной собственности -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-copyright"></i> Права интеллектуальной собственности
+                    </h5>
+                    <p>
+                        Данное программное обеспечение разработано для ЭХП РОСАТОМ,
+                        Автотранспортный цех 013. Все права защищены. Копирование,
+                        модификация и распространение без разрешения запрещены.
+                    </p>
+
+                    <!-- Функциональные возможности -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-star"></i> Основные функциональные возможности
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul>
+                                <li>управление реестром транспортных средств</li>
+                                <li>ведение паспорта ТС (ПТС/ЭПТС)</li>
+                                <li>учёт регистрационных данных ГИБДД</li>
+                                <li>отслеживание документов по срокам</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul>
+                                <li>управление техническим обслуживанием (ТО-2)</li>
+                                <li>полный аудит всех действий</li>
+                                <li>экспорт данных в Excel</li>
+                                <li>управление архивом снятых ТС</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Информация для контактов -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-headset"></i> Поддержка и обратная связь
+                    </h5>
+                    <p>
+                        Для получения технической поддержки или отправки отзывов,
+                        пожалуйста, обратитесь по адресу:
+                        <br>
+                        <strong>Email:</strong>
+                        <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+                    </p>
+
+                    <!-- Кнопка возврата -->
+                    <div class="mt-4">
+                        <a href="{% url 'cards:vehicle_list' %}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Вернуться к системе
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>
+                        Версия {{ version }} | Последнее обновление: {{ copyright_year }} год
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -42,7 +42,7 @@
             </thead>
             <tbody>
                 {% for vehicle in vehicles %}
-                <tr {% if vehicle.has_expiring_documents %}style="background-color: rgba(255, 193, 7, 0.1);"{% endif %}>
+                <tr class="{{ vehicle.get_expiry_class }}">
                     <td>
                         <a href="{% url 'cards:vehicle_detail' vehicle.pk %}" class="text-decoration-none fw-bold text-primary">
                             {{ vehicle.garage_number }}
