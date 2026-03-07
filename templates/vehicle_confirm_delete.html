@@ -14,7 +14,7 @@
     <button type="submit" class="btn btn-danger btn-lg">
         <i class="fas fa-trash"></i> Удалить
     </button>
-    <a href="{% url "vehicle-detail" vehicle.pk %}" class="btn btn-secondary btn-lg">
+    <a href="{% url 'cards:vehicle_detail' vehicle.pk %}" class="btn btn-secondary btn-lg">
         <i class="fas fa-arrow-left"></i> Отмена
     </a>
 </form>

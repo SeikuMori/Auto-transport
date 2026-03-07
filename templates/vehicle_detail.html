@@ -8,10 +8,10 @@
         <i class="fas fa-car"></i> {{ vehicle.garage_number }} - {{ vehicle.brand_model }}
     </h1>
     <div>
-        <a href="{% url "vehicle-update" vehicle.pk %}" class="btn btn-warning">
+        <a href="{% url 'cards:vehicle_edit' vehicle.pk %}" class="btn btn-warning">
             <i class="fas fa-edit"></i> Редактировать
         </a>
-        <a href="{% url "vehicle-list" %}" class="btn btn-secondary">
+        <a href="{% url 'cards:vehicle_list' %}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Назад
         </a>
     </div>
@@ -94,7 +94,7 @@
 </div>
 
 <div class="mt-4">
-    <a href="{% url "vehicle-delete" vehicle.pk %}" class="btn btn-danger">
+    <a href="{% url 'cards:vehicle_delete' vehicle.pk %}" class="btn btn-danger">
         <i class="fas fa-trash"></i> Удалить
     </a>
 </div>
