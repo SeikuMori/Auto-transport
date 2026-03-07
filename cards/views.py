@@ -5,8 +5,7 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from datetime import datetime
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+# openpyxl импортируется локально в VehicleExportView
 from .models import Vehicle, AuditLog, UserProfile
 
 
@@ -114,6 +113,10 @@ class VehicleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
     def test_func(self):
         """Проверка: может ли пользователь редактировать"""
+        # Суперпользователь всегда имеет доступ
+        if self.request.user.is_superuser:
+            return True
+        # Проверка групп для обычных пользователей
         groups = [g.name for g in self.request.user.groups.all()]
         return 'Администратор' in groups or 'Специалист' in groups or 'Руководитель' in groups
 
@@ -204,6 +207,10 @@ class VehicleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         """Проверка: может ли пользователь редактировать"""
+        # Суперпользователь всегда имеет доступ
+        if self.request.user.is_superuser:
+            return True
+        # Проверка групп для обычных пользователей
         groups = [g.name for g in self.request.user.groups.all()]
         return 'Администратор' in groups or 'Специалист' in groups or 'Руководитель' in groups
 
@@ -253,6 +260,14 @@ class VehicleExportView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         """Генерирует Excel файл и возвращает его как ответ"""
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        except ImportError:
+            return JsonResponse({
+                'error': 'openpyxl not installed. Run: pip install openpyxl'
+            }, status=500)
+
         vehicles = self.get_queryset()
 
         # Создаём новую рабочую книгу
