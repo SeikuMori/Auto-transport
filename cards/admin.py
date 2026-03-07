@@ -71,6 +71,14 @@ class BodyTypeAdmin(admin.ModelAdmin):
 
 # ===== ОСНОВНАЯ МОДЕЛЬ =====
 
+class MaintenanceScheduleInline(admin.TabularInline):
+    """Встроенное редактирование расписания ТО-2 прямо из формы ТС"""
+    model = MaintenanceSchedule
+    extra = 1
+    fields = ('status', 'last_maintenance_date', 'next_maintenance_date', 'next_maintenance_mileage', 'notes')
+    ordering = ('-next_maintenance_date',)
+
+
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
     """
@@ -81,12 +89,14 @@ class VehicleAdmin(admin.ModelAdmin):
     - `search_fields` и `list_filter` — удобные фильтры/поиск в админке
     - `fieldsets` — организация полей в форме редактирования (по блокам/категориям)
     - `readonly_fields` и методы превью — показываем превью изображений и файлов
+    - `inlines` — вложенное редактирование (MaintenanceSchedule)
     """
 
     list_display = ('garage_number', 'brand_model', 'vin', 'pts_type', 'color', 'vehicle_type', 'archive_status')
     list_filter = ('pts_type', 'brand_model', 'color', 'vehicle_type', 'category', 'fuel_type', 'is_archived')
     search_fields = ('garage_number', 'vin', 'brand_model__name')
     ordering = ('-is_archived', 'garage_number')
+    inlines = [MaintenanceScheduleInline]
 
     fieldsets = (
         ('БЛОК 1: ПАСПОРТ ТРАНСПОРТНОГО СРЕДСТВА (ПТС/ЭПТС, VIN, марка, модель)', {
