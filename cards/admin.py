@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Vehicle, BrandModel, Color, VehicleType, Category, FuelType, BodyType, UserProfile, AuditLog
+from .models import Vehicle, BrandModel, Color, VehicleType, Category, FuelType, BodyType, UserProfile, AuditLog, MaintenanceSchedule
 
 
 # ===== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ =====
@@ -89,42 +89,75 @@ class VehicleAdmin(admin.ModelAdmin):
     ordering = ('-is_archived', 'garage_number')
 
     fieldsets = (
-        ('Основные реквизиты', {
-            'fields': ('garage_number', 'brand_model', 'vin', 'photo', 'photo_preview')
+        ('БЛОК 1: ПАСПОРТ ТРАНСПОРТНОГО СРЕДСТВА (ПТС/ЭПТС, VIN, марка, модель)', {
+            'fields': (
+                ('garage_number', 'vin'),
+                ('brand_model', 'color', 'vehicle_type'),
+                ('category', 'fuel_type', 'body_type'),
+                'photo',
+                'photo_preview',
+                ('pts_type', 'pts_series', 'pts_number', 'pts_date'),
+                'pts_scan',
+                'pts_preview',
+                ('epts_number', 'epts_date'),
+                'epts_scan',
+                'epts_preview',
+            ),
+            'description': 'Основная информация о транспортном средстве, ПТС и ЭПТС'
         }),
-        ('Характеристики', {
-            'fields': ('color', 'vehicle_type', 'category', 'fuel_type', 'body_type',
-                      'mass_kg', 'mileage_km', 'engine_volume', 'engine_power_hp', 'axles_count'),
-            'classes': ('collapse',)
-        }),
-        ('Паспорт транспортного средства (ПТС)', {
-            'fields': ('pts_type', 'pts_series', 'pts_number', 'pts_date', 'pts_scan', 'pts_preview'),
-            'classes': ('collapse',)
-        }),
-        ('Электронный паспорт (ЭПТС)', {
-            'fields': ('epts_number', 'epts_date', 'epts_scan', 'epts_preview'),
-            'classes': ('collapse',)
-        }),
-        ('Регистрационные данные ГИБДД', {
+        ('БЛОК 2: РЕГИСТРАЦИОННЫЕ ДАННЫЕ ГИБДД', {
             'fields': (
                 ('grz_series', 'grz_number', 'grz_date'),
-                ('reg_certificate_series', 'reg_certificate_number', 'reg_certificate_date', 'reg_certificate_scan'),
-                ('osago_number', 'osago_date_issued', 'osago_date_expiry', 'osago_scan'),
-                ('diagnostic_card_number', 'diagnostic_card_date', 'diagnostic_card_expiry', 'diagnostic_card_scan')
+                ('reg_certificate_series', 'reg_certificate_number', 'reg_certificate_date'),
+                'reg_certificate_scan',
+                ('osago_number', 'osago_date_issued', 'osago_date_expiry', 'osago_cost'),
+                'osago_scan',
+                ('diagnostic_card_number', 'diagnostic_card_date', 'diagnostic_card_expiry'),
+                'diagnostic_card_scan',
             ),
-            'classes': ('collapse',)
+            'classes': ('collapse',),
+            'description': 'Данные регистрации в ГИБДД, ОСАГО и диагностическая карта'
         }),
-        ('ГБО (газобаллонное оборудование)', {
-            'fields': ('gbo_present', 'gbo_type', 'gbo_volume', 'gbo_installation_date'),
-            'classes': ('collapse',)
+        ('БЛОК 3: ОБЩИЕ ХАРАКТЕРИСТИКИ ТС', {
+            'fields': (
+                ('mass_kg', 'empty_mass', 'cargo_capacity'),
+                ('engine_volume', 'engine_power_hp', 'engine_power_kw'),
+                ('engine_model_number', 'chassis_number', 'body_number'),
+                ('year_of_manufacture', 'mileage_km', 'motor_hours', 'mileage_type'),
+                ('passenger_capacity', 'bus_length', 'bucket_capacity'),
+                ('fuel_tank_capacity', 'fuel_grade', 'fuel_consumption_type'),
+                ('fuel_consumption_summer_city', 'fuel_consumption_summer_highway'),
+                ('fuel_consumption_winter_city', 'fuel_consumption_winter_highway'),
+                'fuel_consumption_per_hour',
+                ('gbo_present', 'gbo_type', 'gbo_volume', 'gbo_installation_date'),
+                ('gbo_cylinders_count', 'gbo_total_capacity', 'gbo_inspection_date', 'gbo_next_inspection_date'),
+                'gbo_inspection_scan',
+                ('dprg_inspection_date', 'dprg_next_inspection_date'),
+                'dprg_inspection_scan',
+                ('has_ssmt', 'has_tachograph', 'tachograph_calibration_date', 'tachograph_next_calibration_date'),
+                ('has_lifting_equipment', 'initial_cost'),
+                ('vehicle_type_for_military', 'vehicle_type_for_tax'),
+                ('inventory_number', 'motorpool', 'direction'),
+                ('ts_status', 'dismission_date', 'axles_count'),
+                ('to2_periodicity',),
+            ),
+            'classes': ('collapse',),
+            'description': 'Технические характеристики, ГБО, тахограф и прочие сведения'
         }),
-        ('Документы по срокам', {
-            'fields': ('to2_period_days', 'to3_period_days', 'tech_inspection_expiry', 'insurance_expiry'),
-            'classes': ('collapse',)
+        ('БЛОК 4: ДОКУМЕНТЫ ПО СРОКАМ И БУХГАЛТЕРСКИЕ ДАННЫЕ', {
+            'fields': (
+                ('to2_period_days', 'to3_period_days'),
+                ('tech_inspection_expiry', 'insurance_expiry'),
+                ('okof_code', 'date_in_service'),
+                ('depreciation_rate', 'accumulated_depreciation', 'residual_value'),
+            ),
+            'classes': ('collapse',),
+            'description': 'Сроки документов (ТО, техосмотр) и бухгалтерские показатели'
         }),
-        ('Архивирование', {
+        ('АРХИВИРОВАНИЕ', {
             'fields': ('is_archived', 'archived_at', 'archived_by'),
-            'classes': ('collapse',)
+            'classes': ('collapse',),
+            'description': 'Статус архивирования и дата снятия с учета'
         }),
     )
 
@@ -190,6 +223,71 @@ class VehicleAdmin(admin.ModelAdmin):
                 '<span style="background-color: #28a745; color: #fff; padding: 5px 10px; border-radius: 3px; font-weight: bold;">АКТИВНО</span>'
             )
     archive_status.short_description = "Статус архива"
+
+
+# ===== ТЕХНИЧЕСКОЕ ОБСЛУЖИВАНИЕ (ТО-2) =====
+
+@admin.register(MaintenanceSchedule)
+class MaintenanceScheduleAdmin(admin.ModelAdmin):
+    """
+    Администраторский интерфейс для управления расписанием ТО-2.
+
+    Отображает:
+    - Связь с ТС
+    - История последнего обслуживания (дата и пробег)
+    - Дата и пробег следующего обслуживания
+    - Статус выполнения (Запланировано, В процессе, Завершено, Просрочено, Отменено)
+    - Заметки и результаты
+    """
+    list_display = ('vehicle', 'status_colored', 'next_maintenance_date', 'last_maintenance_date', 'created_at')
+    list_filter = ('status', 'vehicle', 'next_maintenance_date', 'created_at')
+    search_fields = ('vehicle__garage_number', 'vehicle__brand_model__name')
+    readonly_fields = ('created_at', 'updated_at')
+    ordering = ('-next_maintenance_date',)
+
+    fieldsets = (
+        ('ТС и статус', {
+            'fields': ('vehicle', 'status')
+        }),
+        ('История обслуживания', {
+            'fields': (
+                ('last_maintenance_date', 'last_maintenance_mileage'),
+            ),
+            'classes': ('collapse',),
+            'description': 'Дата и пробег последнего проведённого ТО-2'
+        }),
+        ('Следующее обслуживание', {
+            'fields': (
+                ('next_maintenance_date', 'next_maintenance_mileage'),
+            ),
+            'description': 'Дата и пробег, на который запланировано следующее ТО-2'
+        }),
+        ('Заметки и результаты', {
+            'fields': ('notes',),
+            'classes': ('collapse',)
+        }),
+        ('Системные данные', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def status_colored(self, obj):
+        """Отобразить статус с цветной подсветкой"""
+        colors = {
+            'scheduled': '#0056b3',    # синий
+            'in_progress': '#0dcaf0', # голубой
+            'completed': '#28a745',   # зелёный
+            'overdue': '#dc3545',     # красный
+            'cancelled': '#6c757d',   # серый
+        }
+        color = colors.get(obj.status, '#6c757d')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 8px; border-radius: 3px; font-weight: bold;">{}</span>',
+            color,
+            obj.get_status_display()
+        )
+    status_colored.short_description = 'Статус'
 
 
 # ===== АУДИТ-ЛОГИРОВАНИЕ =====
