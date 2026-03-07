@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Форма ТС - ЭХП РОСАТОМ{% endblock %}
+{% block title %}{% if form.instance.pk %}Редактирование{% else %}Добавить{% endif %} ТС - ЭХП РОСАТОМ{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -9,56 +9,388 @@
         {% if form.instance.pk %}
             Редактирование: {{ form.instance.garage_number }}
         {% else %}
-            Новый автомобиль
+            Новое транспортное средство
         {% endif %}
     </h1>
 </div>
 
-<form method="post" enctype="multipart/form-data">
+{% if form.non_field_errors %}
+<div class="alert alert-danger">
+    <strong>Ошибки формы:</strong>
+    {{ form.non_field_errors }}
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="needs-validation">
     {% csrf_token %}
 
-    {% if form.non_field_errors %}
-    <div class="alert alert-danger">
-        <h5>Ошибки:</h5>
-        {{ form.non_field_errors }}
-    </div>
-    {% endif %}
-
-    <div class="card mb-3">
+    <!-- БЛОК 1: ПАСПОРТ ТС -->
+    <div class="card mb-4">
         <div class="card-header">
-            <i class="fas fa-id-card"></i> Основные данные
+            <i class="fas fa-id-card"></i> <strong>Блок 1: Паспорт Транспортного Средства</strong>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Гаражный номер</label>
+                    <label for="{{ form.garage_number.id_for_label }}" class="form-label">{{ form.garage_number.label }}</label>
                     {{ form.garage_number }}
+                    {% if form.garage_number.errors %}<small class="text-danger">{{ form.garage_number.errors }}</small>{% endif %}
+                    <small class="form-text text-muted">Уникальный номер в системе</small>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">VIN</label>
+                    <label for="{{ form.vin.id_for_label }}" class="form-label">{{ form.vin.label }}</label>
                     {{ form.vin }}
+                    {% if form.vin.errors %}<small class="text-danger">{{ form.vin.errors }}</small>{% endif %}
+                    <small class="form-text text-muted">17-значный код</small>
                 </div>
             </div>
+
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Марка и модель</label>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.brand_model.id_for_label }}" class="form-label">{{ form.brand_model.label }}</label>
                     {{ form.brand_model }}
+                    {% if form.brand_model.errors %}<small class="text-danger">{{ form.brand_model.errors }}</small>{% endif %}
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Цвет</label>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.color.id_for_label }}" class="form-label">{{ form.color.label }}</label>
                     {{ form.color }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.vehicle_type.id_for_label }}" class="form-label">{{ form.vehicle_type.label }}</label>
+                    {{ form.vehicle_type }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
+                    {{ form.category }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.fuel_type.id_for_label }}" class="form-label">{{ form.fuel_type.label }}</label>
+                    {{ form.fuel_type }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.body_type.id_for_label }}" class="form-label">{{ form.body_type.label }}</label>
+                    {{ form.body_type }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.year_of_manufacture.id_for_label }}" class="form-label">{{ form.year_of_manufacture.label }}</label>
+                    {{ form.year_of_manufacture }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.photo.id_for_label }}" class="form-label">{{ form.photo.label }}</label>
+                {{ form.photo }}
+            </div>
+
+            <!-- ПТС -->
+            <div class="row mt-3 pt-3 border-top">
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.pts_type.id_for_label }}" class="form-label">{{ form.pts_type.label }}</label>
+                    {{ form.pts_type }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.pts_series.id_for_label }}" class="form-label">{{ form.pts_series.label }}</label>
+                    {{ form.pts_series }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.pts_number.id_for_label }}" class="form-label">{{ form.pts_number.label }}</label>
+                    {{ form.pts_number }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.pts_date.id_for_label }}" class="form-label">{{ form.pts_date.label }}</label>
+                    {{ form.pts_date }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.pts_scan.id_for_label }}" class="form-label">{{ form.pts_scan.label }}</label>
+                    {{ form.pts_scan }}
+                </div>
+            </div>
+
+            <!-- ЭПТС -->
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.epts_number.id_for_label }}" class="form-label">{{ form.epts_number.label }}</label>
+                    {{ form.epts_number }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.epts_date.id_for_label }}" class="form-label">{{ form.epts_date.label }}</label>
+                    {{ form.epts_date }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.epts_scan.id_for_label }}" class="form-label">{{ form.epts_scan.label }}</label>
+                    {{ form.epts_scan }}
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="d-flex gap-2">
+    <!-- БЛОК 2: ГИБДД -->
+    <div class="card mb-4">
+        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#block2" style="cursor: pointer;">
+            <i class="fas fa-file-signature"></i> <strong>Блок 2: Регистрационные данные ГИБДД (разверните)</strong>
+        </div>
+        <div id="block2" class="collapse card-body">
+            <!-- ГРЗ -->
+            <div class="row mb-3">
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.grz_series.id_for_label }}" class="form-label">{{ form.grz_series.label }}</label>
+                    {{ form.grz_series }}
+                </div>
+                <div class="col-md-5 mb-3">
+                    <label for="{{ form.grz_number.id_for_label }}" class="form-label">{{ form.grz_number.label }}</label>
+                    {{ form.grz_number }}
+                </div>
+                <div class="col-md-5 mb-3">
+                    <label for="{{ form.grz_date.id_for_label }}" class="form-label">{{ form.grz_date.label }}</label>
+                    {{ form.grz_date }}
+                </div>
+            </div>
+
+            <!-- Свидетельство регистрации -->
+            <div class="row mb-3">
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.reg_certificate_series.id_for_label }}" class="form-label">{{ form.reg_certificate_series.label }}</label>
+                    {{ form.reg_certificate_series }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.reg_certificate_number.id_for_label }}" class="form-label">{{ form.reg_certificate_number.label }}</label>
+                    {{ form.reg_certificate_number }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.reg_certificate_date.id_for_label }}" class="form-label">{{ form.reg_certificate_date.label }}</label>
+                    {{ form.reg_certificate_date }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.reg_certificate_scan.id_for_label }}" class="form-label">Скан</label>
+                    {{ form.reg_certificate_scan }}
+                </div>
+            </div>
+
+            <!-- ОСАГО -->
+            <div class="row mb-3 pt-3 border-top">
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.osago_number.id_for_label }}" class="form-label">{{ form.osago_number.label }}</label>
+                    {{ form.osago_number }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.osago_date_issued.id_for_label }}" class="form-label">Выдана</label>
+                    {{ form.osago_date_issued }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.osago_date_expiry.id_for_label }}" class="form-label">Истекает</label>
+                    {{ form.osago_date_expiry }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.osago_cost.id_for_label }}" class="form-label">{{ form.osago_cost.label }}</label>
+                    {{ form.osago_cost }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.osago_scan.id_for_label }}" class="form-label">Скан</label>
+                    {{ form.osago_scan }}
+                </div>
+            </div>
+
+            <!-- Диагностика -->
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.diagnostic_card_number.id_for_label }}" class="form-label">{{ form.diagnostic_card_number.label }}</label>
+                    {{ form.diagnostic_card_number }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.diagnostic_card_date.id_for_label }}" class="form-label">Дата</label>
+                    {{ form.diagnostic_card_date }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.diagnostic_card_expiry.id_for_label }}" class="form-label">Истекает</label>
+                    {{ form.diagnostic_card_expiry }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.diagnostic_card_scan.id_for_label }}" class="form-label">Скан</label>
+                    {{ form.diagnostic_card_scan }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- БЛОК 3: ТЕХНИЧЕСКИЕ ХАРАКТЕРИСТИКИ -->
+    <div class="card mb-4">
+        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#block3" style="cursor: pointer;">
+            <i class="fas fa-cog"></i> <strong>Блок 3: Технические характеристики (разверните)</strong>
+        </div>
+        <div id="block3" class="collapse card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.mass_kg.id_for_label }}" class="form-label">{{ form.mass_kg.label }}</label>
+                    {{ form.mass_kg }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.empty_mass.id_for_label }}" class="form-label">{{ form.empty_mass.label }}</label>
+                    {{ form.empty_mass }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.cargo_capacity.id_for_label }}" class="form-label">{{ form.cargo_capacity.label }}</label>
+                    {{ form.cargo_capacity }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.engine_volume.id_for_label }}" class="form-label">{{ form.engine_volume.label }}</label>
+                    {{ form.engine_volume }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.engine_power_hp.id_for_label }}" class="form-label">{{ form.engine_power_hp.label }}</label>
+                    {{ form.engine_power_hp }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.engine_power_kw.id_for_label }}" class="form-label">{{ form.engine_power_kw.label }}</label>
+                    {{ form.engine_power_kw }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.mileage_km.id_for_label }}" class="form-label">{{ form.mileage_km.label }}</label>
+                    {{ form.mileage_km }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.passenger_capacity.id_for_label }}" class="form-label">{{ form.passenger_capacity.label }}</label>
+                    {{ form.passenger_capacity }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.chassis_number.id_for_label }}" class="form-label">{{ form.chassis_number.label }}</label>
+                    {{ form.chassis_number }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.body_number.id_for_label }}" class="form-label">{{ form.body_number.label }}</label>
+                    {{ form.body_number }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.engine_model_number.id_for_label }}" class="form-label">{{ form.engine_model_number.label }}</label>
+                    {{ form.engine_model_number }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.fuel_grade.id_for_label }}" class="form-label">{{ form.fuel_grade.label }}</label>
+                    {{ form.fuel_grade }}
+                </div>
+            </div>
+
+            <!-- ГБО -->
+            <div class="row mt-3 pt-3 border-top">
+                <div class="col-md-2 mb-3">
+                    <div class="form-check">
+                        {{ form.gbo_present }}
+                        <label for="{{ form.gbo_present.id_for_label }}" class="form-check-label">{{ form.gbo_present.label }}</label>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.gbo_type.id_for_label }}" class="form-label">{{ form.gbo_type.label }}</label>
+                    {{ form.gbo_type }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.gbo_volume.id_for_label }}" class="form-label">{{ form.gbo_volume.label }}</label>
+                    {{ form.gbo_volume }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.gbo_installation_date.id_for_label }}" class="form-label">{{ form.gbo_installation_date.label }}</label>
+                    {{ form.gbo_installation_date }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="{{ form.gbo_cylinders_count.id_for_label }}" class="form-label">{{ form.gbo_cylinders_count.label }}</label>
+                    {{ form.gbo_cylinders_count }}
+                </div>
+            </div>
+
+            <!-- Тахограф -->
+            <div class="row mt-3">
+                <div class="col-md-2 mb-3">
+                    <div class="form-check">
+                        {{ form.has_tachograph }}
+                        <label for="{{ form.has_tachograph.id_for_label }}" class="form-check-label">{{ form.has_tachograph.label }}</label>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.tachograph_calibration_date.id_for_label }}" class="form-label">{{ form.tachograph_calibration_date.label }}</label>
+                    {{ form.tachograph_calibration_date }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.tachograph_next_calibration_date.id_for_label }}" class="form-label">{{ form.tachograph_next_calibration_date.label }}</label>
+                    {{ form.tachograph_next_calibration_date }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- БЛОК 4: СРОКИ ДОКУМЕНТОВ -->
+    <div class="card mb-4">
+        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#block4" style="cursor: pointer;">
+            <i class="fas fa-calendar-alt"></i> <strong>Блок 4: Сроки документов (разверните)</strong>
+        </div>
+        <div id="block4" class="collapse card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.tech_inspection_expiry.id_for_label }}" class="form-label">{{ form.tech_inspection_expiry.label }}</label>
+                    {{ form.tech_inspection_expiry }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.insurance_expiry.id_for_label }}" class="form-label">{{ form.insurance_expiry.label }}</label>
+                    {{ form.insurance_expiry }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.to2_period_days.id_for_label }}" class="form-label">{{ form.to2_period_days.label }}</label>
+                    {{ form.to2_period_days }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.to3_period_days.id_for_label }}" class="form-label">{{ form.to3_period_days.label }}</label>
+                    {{ form.to3_period_days }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.okof_code.id_for_label }}" class="form-label">{{ form.okof_code.label }}</label>
+                    {{ form.okof_code }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.depreciation_rate.id_for_label }}" class="form-label">{{ form.depreciation_rate.label }}</label>
+                    {{ form.depreciation_rate }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- КНОПКИ -->
+    <div class="d-flex gap-2 mt-4">
         <button type="submit" class="btn btn-primary btn-lg">
             <i class="fas fa-save"></i> Сохранить
         </button>
         <a href="{% url 'cards:vehicle_list' %}" class="btn btn-secondary btn-lg">
-            Отмена
+            <i class="fas fa-arrow-left"></i> Отмена
         </a>
     </div>
 </form>
+
+<style>
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        padding: 0.6rem;
+    }
+
+    .card-header[data-bs-toggle="collapse"] {
+        user-select: none;
+        background-color: #f8f9fa;
+    }
+
+    .card-header[data-bs-toggle="collapse"]:hover {
+        background-color: #e9ecef;
+    }
+</style>
 {% endblock %}
