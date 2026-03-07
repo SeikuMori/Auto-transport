@@ -250,6 +250,18 @@ class Vehicle(models.Model):
         ('hours', 'Моточасы для ДСМ (час.)'),
     )
 
+    TS_STATUS_CHOICES = (
+        ('ready', 'Готово к эксплуатации'),
+        ('in_operation', 'В рейсе'),
+        ('maintenance_1', 'ТО-1'),
+        ('maintenance_2', 'ТО-2'),
+        ('repair', 'Ремонт'),
+        ('inspection', 'Техосмотр'),
+        ('standby', 'Дежурство'),
+        ('idle', 'Простой'),
+        ('archived', 'На консервации/Архив'),
+    )
+
 
     # === БЛОК 1: ПАСПОРТ ТРАНСПОРТНОГО СРЕДСТВА ===
     garage_number = models.CharField(
@@ -810,9 +822,11 @@ class Vehicle(models.Model):
 
     ts_status = models.CharField(
         max_length=50,
+        choices=TS_STATUS_CHOICES,
+        default='ready',
         blank=True,
         verbose_name="Статус ТС",
-        help_text="в рейсе, ремонт, ТО-1, ТО-2, дежурство, простой"
+        help_text="Текущий статус транспортного средства"
     )
 
     gbo_present = models.BooleanField(

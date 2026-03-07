@@ -563,6 +563,117 @@
     </div>
 </div>
 
+<style>
+    /* ========== Основная ответственность: правильное выравнивание полей ========== */
+
+    /* Контейнер .row использует flexbox и заставляет все колонки растягиваться */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;  /* Важно! Это заставляет все колонки быть одной высоты */
+    }
+
+    /* Каждая колонка col-md-*, col-md-4 и т.д. должна растягиваться на всю высоту */
+    .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6 {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* ========== Стили для полей формы ========== */
+
+    /* django-bootstrap5 оборачивает поле в .mb-3 - это основной контейнер поля */
+    .mb-3 {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        /* min-height гарантирует что все поля в одной строке будут одной высоты */
+        min-height: 5.2rem;
+        margin-bottom: 1rem !important;
+    }
+
+    /* Label - текст поля, располагается сверху */
+    .mb-3 > label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+        line-height: 1.3;
+    }
+
+    /* Input, select, textarea - основные элементы для ввода */
+    .form-control,
+    .form-select {
+        border-radius: 6px;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        border: 1px solid #ced4da;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    /* Чекбокс и радио получают нормальную высоту */
+    .form-check-input {
+        margin-top: 0.3rem;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    /* Вспомогательный текст и ошибки */
+    .form-text,
+    .invalid-feedback,
+    .valid-feedback {
+        display: block;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-text {
+        color: #6c757d;
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+    }
+
+    /* Фокус на инпутах */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0056b3;
+        box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.25);
+        outline: none;
+    }
+
+    /* ========== Кастомные элементы ========== */
+
+    /* Файловый input с кастомным UI */
+    .d-flex.align-items-center {
+        min-height: 2.5rem;
+    }
+
+    .btn.btn-outline-secondary {
+        min-height: 2.5rem;
+        padding: 0.6rem 0.75rem;
+    }
+
+    /* ========== Карточки и контейнеры ========== */
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    hr {
+        margin: 1rem 0;
+        border: none;
+        border-top: 1px solid #dee2e6;
+    }
+
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Функция для отображения имени выбранного файла
