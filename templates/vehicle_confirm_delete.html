@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Удаление ТС - ЭХП РОСАТОМ{% endblock %}
+
+{% block content %}
+<div class="alert alert-danger">
+    <h4>Подтверждение удаления</h4>
+    <p>Вы действительно хотите удалить <strong>{{ vehicle.garage_number }}</strong> ({{ vehicle.brand_model }})?</p>
+    <p class="text-muted">Это действие необратимо!</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger btn-lg">
+        <i class="fas fa-trash"></i> Удалить
+    </button>
+    <a href="{% url "vehicle-detail" vehicle.pk %}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-arrow-left"></i> Отмена
+    </a>
+</form>
+{% endblock %}

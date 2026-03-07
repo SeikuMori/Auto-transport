@@ -26,7 +26,7 @@ class VehicleListView(LoginRequiredMixin, ListView):
     Требует аутентификации.
     """
     model = Vehicle
-    template_name = 'cards/vehicle_list.html'
+    template_name = 'vehicle_list.html'
     context_object_name = 'vehicles'
     paginate_by = 10
     login_url = 'admin:login'
@@ -57,7 +57,7 @@ class VehicleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     Только для пользователей в группах: Администратор, Специалист
     """
     model = Vehicle
-    template_name = 'cards/vehicle_form.html'
+    template_name = 'vehicle_form.html'
     fields = [
         # Основные реквизиты
         'garage_number', 'brand_model', 'vin', 'photo',
@@ -126,7 +126,7 @@ class VehicleDetailView(LoginRequiredMixin, DetailView):
     (в зависимости от прав пользователя).
     """
     model = Vehicle
-    template_name = 'cards/vehicle_detail.html'
+    template_name = 'vehicle_detail.html'
     context_object_name = 'vehicle'
     login_url = 'admin:login'
 
@@ -146,7 +146,7 @@ class VehicleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     Только для пользователей в группах: Администратор, Специалист, Руководитель
     """
     model = Vehicle
-    template_name = 'cards/vehicle_form.html'
+    template_name = 'vehicle_form.html'
     fields = [
         # Основные реквизиты
         'garage_number', 'brand_model', 'vin', 'photo',
@@ -215,7 +215,7 @@ class VehicleDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     Только для пользователей в группах: Администратор, Руководитель
     """
     model = Vehicle
-    template_name = 'cards/vehicle_confirm_delete.html'
+    template_name = 'vehicle_confirm_delete.html'
     success_url = reverse_lazy('cards:vehicle_list')
     login_url = 'admin:login'
 

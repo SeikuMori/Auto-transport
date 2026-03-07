@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ vehicle.garage_number }} - ЭХП РОСАТОМ{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <i class="fas fa-car"></i> {{ vehicle.garage_number }} - {{ vehicle.brand_model }}
+    </h1>
+    <div>
+        <a href="{% url "vehicle-update" vehicle.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Редактировать
+        </a>
+        <a href="{% url "vehicle-list" %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Назад
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-header">Статус</div>
+            <div class="card-body">
+                {% if vehicle.is_archived %}
+                    <span class="badge badge-archived">Архивирован</span>
+                {% else %}
+                    <span class="badge badge-active">Активен</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Основные данные</div>
+            <div class="card-body">
+                <p><strong>VIN:</strong> <code>{{ vehicle.vin }}</code></p>
+                <p><strong>Марка:</strong> {{ vehicle.brand_model }}</p>
+                <p><strong>Цвет:</strong> {{ vehicle.color }}</p>
+                <p><strong>Год:</strong> {{ vehicle.year_of_manufacture }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="fas fa-calendar-alt"></i> Важные сроки
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Техосмотр:</strong></p>
+                        <p>
+                            {% if vehicle.tech_inspection_expiry %}
+                                {{ vehicle.tech_inspection_expiry }}
+                            {% else %}
+                                <span class="text-muted">Не заполнено</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>ОСАГО:</strong></p>
+                        <p>
+                            {% if vehicle.osago_date_expiry %}
+                                {{ vehicle.osago_date_expiry }}
+                            {% else %}
+                                <span class="text-muted">Не заполнено</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-tools"></i> Технические характеристики
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Объем двигателя:</strong> {{ vehicle.engine_volume }} л</p>
+                        <p><strong>Мощность:</strong> {{ vehicle.engine_power_hp }} л.с.</p>
+                        <p><strong>Тип топлива:</strong> {{ vehicle.fuel_type }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Масса:</strong> {{ vehicle.mass_kg }} кг</p>
+                        <p><strong>Пробег:</strong> {{ vehicle.mileage_km }} км</p>
+                        <p><strong>Вместимость:</strong> {{ vehicle.passenger_capacity }} чел.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url "vehicle-delete" vehicle.pk %}" class="btn btn-danger">
+        <i class="fas fa-trash"></i> Удалить
+    </a>
+</div>
+{% endblock %}
